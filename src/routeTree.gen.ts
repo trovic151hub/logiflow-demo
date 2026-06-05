@@ -13,6 +13,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CustomerIndexRouteImport } from './routes/customer.index'
+import { Route as CustomerBookRouteImport } from './routes/customer.book'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -34,17 +35,24 @@ const CustomerIndexRoute = CustomerIndexRouteImport.update({
   path: '/customer/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomerBookRoute = CustomerBookRouteImport.update({
+  id: '/customer/book',
+  path: '/customer/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/customer/book': typeof CustomerBookRoute
   '/customer/': typeof CustomerIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/customer/book': typeof CustomerBookRoute
   '/customer': typeof CustomerIndexRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,28 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/customer/book': typeof CustomerBookRoute
   '/customer/': typeof CustomerIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register' | '/customer/'
+  fullPaths: '/' | '/login' | '/register' | '/customer/book' | '/customer/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/register' | '/customer'
-  id: '__root__' | '/' | '/login' | '/register' | '/customer/'
+  to: '/' | '/login' | '/register' | '/customer/book' | '/customer'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/register'
+    | '/customer/book'
+    | '/customer/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  CustomerBookRoute: typeof CustomerBookRoute
   CustomerIndexRoute: typeof CustomerIndexRoute
 }
 
@@ -99,6 +115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customer/book': {
+      id: '/customer/book'
+      path: '/customer/book'
+      fullPath: '/customer/book'
+      preLoaderRoute: typeof CustomerBookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -106,6 +129,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  CustomerBookRoute: CustomerBookRoute,
   CustomerIndexRoute: CustomerIndexRoute,
 }
 export const routeTree = rootRouteImport
