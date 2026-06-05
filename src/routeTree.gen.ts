@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RiderIndexRouteImport } from './routes/rider.index'
 import { Route as CustomerIndexRouteImport } from './routes/customer.index'
 import { Route as CustomerHistoryRouteImport } from './routes/customer.history'
 import { Route as CustomerBookRouteImport } from './routes/customer.book'
@@ -30,6 +31,11 @@ const LoginRoute = LoginRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RiderIndexRoute = RiderIndexRouteImport.update({
+  id: '/rider/',
+  path: '/rider/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomerIndexRoute = CustomerIndexRouteImport.update({
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/customer/book': typeof CustomerBookRoute
   '/customer/history': typeof CustomerHistoryRoute
   '/customer/': typeof CustomerIndexRoute
+  '/rider/': typeof RiderIndexRoute
   '/customer/track/$id': typeof CustomerTrackIdRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/customer/book': typeof CustomerBookRoute
   '/customer/history': typeof CustomerHistoryRoute
   '/customer': typeof CustomerIndexRoute
+  '/rider': typeof RiderIndexRoute
   '/customer/track/$id': typeof CustomerTrackIdRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/customer/book': typeof CustomerBookRoute
   '/customer/history': typeof CustomerHistoryRoute
   '/customer/': typeof CustomerIndexRoute
+  '/rider/': typeof RiderIndexRoute
   '/customer/track/$id': typeof CustomerTrackIdRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/customer/book'
     | '/customer/history'
     | '/customer/'
+    | '/rider/'
     | '/customer/track/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/customer/book'
     | '/customer/history'
     | '/customer'
+    | '/rider'
     | '/customer/track/$id'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/customer/book'
     | '/customer/history'
     | '/customer/'
+    | '/rider/'
     | '/customer/track/$id'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   CustomerBookRoute: typeof CustomerBookRoute
   CustomerHistoryRoute: typeof CustomerHistoryRoute
   CustomerIndexRoute: typeof CustomerIndexRoute
+  RiderIndexRoute: typeof RiderIndexRoute
   CustomerTrackIdRoute: typeof CustomerTrackIdRoute
 }
 
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rider/': {
+      id: '/rider/'
+      path: '/rider'
+      fullPath: '/rider/'
+      preLoaderRoute: typeof RiderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customer/': {
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustomerBookRoute: CustomerBookRoute,
   CustomerHistoryRoute: CustomerHistoryRoute,
   CustomerIndexRoute: CustomerIndexRoute,
+  RiderIndexRoute: RiderIndexRoute,
   CustomerTrackIdRoute: CustomerTrackIdRoute,
 }
 export const routeTree = rootRouteImport
