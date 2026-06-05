@@ -9,38 +9,173 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RiderIndexRouteImport } from './routes/rider.index'
+import { Route as CustomerIndexRouteImport } from './routes/customer.index'
+import { Route as RiderEarningsRouteImport } from './routes/rider.earnings'
+import { Route as CustomerHistoryRouteImport } from './routes/customer.history'
+import { Route as CustomerBookRouteImport } from './routes/customer.book'
+import { Route as RiderJobIdRouteImport } from './routes/rider.job.$id'
+import { Route as CustomerTrackIdRouteImport } from './routes/customer.track.$id'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RiderIndexRoute = RiderIndexRouteImport.update({
+  id: '/rider/',
+  path: '/rider/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerIndexRoute = CustomerIndexRouteImport.update({
+  id: '/customer/',
+  path: '/customer/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RiderEarningsRoute = RiderEarningsRouteImport.update({
+  id: '/rider/earnings',
+  path: '/rider/earnings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerHistoryRoute = CustomerHistoryRouteImport.update({
+  id: '/customer/history',
+  path: '/customer/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerBookRoute = CustomerBookRouteImport.update({
+  id: '/customer/book',
+  path: '/customer/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RiderJobIdRoute = RiderJobIdRouteImport.update({
+  id: '/rider/job/$id',
+  path: '/rider/job/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerTrackIdRoute = CustomerTrackIdRouteImport.update({
+  id: '/customer/track/$id',
+  path: '/customer/track/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/customer/book': typeof CustomerBookRoute
+  '/customer/history': typeof CustomerHistoryRoute
+  '/rider/earnings': typeof RiderEarningsRoute
+  '/customer/': typeof CustomerIndexRoute
+  '/rider/': typeof RiderIndexRoute
+  '/customer/track/$id': typeof CustomerTrackIdRoute
+  '/rider/job/$id': typeof RiderJobIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/customer/book': typeof CustomerBookRoute
+  '/customer/history': typeof CustomerHistoryRoute
+  '/rider/earnings': typeof RiderEarningsRoute
+  '/customer': typeof CustomerIndexRoute
+  '/rider': typeof RiderIndexRoute
+  '/customer/track/$id': typeof CustomerTrackIdRoute
+  '/rider/job/$id': typeof RiderJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/customer/book': typeof CustomerBookRoute
+  '/customer/history': typeof CustomerHistoryRoute
+  '/rider/earnings': typeof RiderEarningsRoute
+  '/customer/': typeof CustomerIndexRoute
+  '/rider/': typeof RiderIndexRoute
+  '/customer/track/$id': typeof CustomerTrackIdRoute
+  '/rider/job/$id': typeof RiderJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/customer/book'
+    | '/customer/history'
+    | '/rider/earnings'
+    | '/customer/'
+    | '/rider/'
+    | '/customer/track/$id'
+    | '/rider/job/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/customer/book'
+    | '/customer/history'
+    | '/rider/earnings'
+    | '/customer'
+    | '/rider'
+    | '/customer/track/$id'
+    | '/rider/job/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/register'
+    | '/customer/book'
+    | '/customer/history'
+    | '/rider/earnings'
+    | '/customer/'
+    | '/rider/'
+    | '/customer/track/$id'
+    | '/rider/job/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  CustomerBookRoute: typeof CustomerBookRoute
+  CustomerHistoryRoute: typeof CustomerHistoryRoute
+  RiderEarningsRoute: typeof RiderEarningsRoute
+  CustomerIndexRoute: typeof CustomerIndexRoute
+  RiderIndexRoute: typeof RiderIndexRoute
+  CustomerTrackIdRoute: typeof CustomerTrackIdRoute
+  RiderJobIdRoute: typeof RiderJobIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +183,70 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rider/': {
+      id: '/rider/'
+      path: '/rider'
+      fullPath: '/rider/'
+      preLoaderRoute: typeof RiderIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/': {
+      id: '/customer/'
+      path: '/customer'
+      fullPath: '/customer/'
+      preLoaderRoute: typeof CustomerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rider/earnings': {
+      id: '/rider/earnings'
+      path: '/rider/earnings'
+      fullPath: '/rider/earnings'
+      preLoaderRoute: typeof RiderEarningsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/history': {
+      id: '/customer/history'
+      path: '/customer/history'
+      fullPath: '/customer/history'
+      preLoaderRoute: typeof CustomerHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/book': {
+      id: '/customer/book'
+      path: '/customer/book'
+      fullPath: '/customer/book'
+      preLoaderRoute: typeof CustomerBookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rider/job/$id': {
+      id: '/rider/job/$id'
+      path: '/rider/job/$id'
+      fullPath: '/rider/job/$id'
+      preLoaderRoute: typeof RiderJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/track/$id': {
+      id: '/customer/track/$id'
+      path: '/customer/track/$id'
+      fullPath: '/customer/track/$id'
+      preLoaderRoute: typeof CustomerTrackIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  CustomerBookRoute: CustomerBookRoute,
+  CustomerHistoryRoute: CustomerHistoryRoute,
+  RiderEarningsRoute: RiderEarningsRoute,
+  CustomerIndexRoute: CustomerIndexRoute,
+  RiderIndexRoute: RiderIndexRoute,
+  CustomerTrackIdRoute: CustomerTrackIdRoute,
+  RiderJobIdRoute: RiderJobIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
