@@ -16,6 +16,7 @@ import { Route as RiderIndexRouteImport } from './routes/rider.index'
 import { Route as CustomerIndexRouteImport } from './routes/customer.index'
 import { Route as CustomerHistoryRouteImport } from './routes/customer.history'
 import { Route as CustomerBookRouteImport } from './routes/customer.book'
+import { Route as RiderJobIdRouteImport } from './routes/rider.job.$id'
 import { Route as CustomerTrackIdRouteImport } from './routes/customer.track.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -53,6 +54,11 @@ const CustomerBookRoute = CustomerBookRouteImport.update({
   path: '/customer/book',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RiderJobIdRoute = RiderJobIdRouteImport.update({
+  id: '/rider/job/$id',
+  path: '/rider/job/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CustomerTrackIdRoute = CustomerTrackIdRouteImport.update({
   id: '/customer/track/$id',
   path: '/customer/track/$id',
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/customer/': typeof CustomerIndexRoute
   '/rider/': typeof RiderIndexRoute
   '/customer/track/$id': typeof CustomerTrackIdRoute
+  '/rider/job/$id': typeof RiderJobIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/customer': typeof CustomerIndexRoute
   '/rider': typeof RiderIndexRoute
   '/customer/track/$id': typeof CustomerTrackIdRoute
+  '/rider/job/$id': typeof RiderJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/customer/': typeof CustomerIndexRoute
   '/rider/': typeof RiderIndexRoute
   '/customer/track/$id': typeof CustomerTrackIdRoute
+  '/rider/job/$id': typeof RiderJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/customer/'
     | '/rider/'
     | '/customer/track/$id'
+    | '/rider/job/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/customer'
     | '/rider'
     | '/customer/track/$id'
+    | '/rider/job/$id'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/customer/'
     | '/rider/'
     | '/customer/track/$id'
+    | '/rider/job/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   CustomerIndexRoute: typeof CustomerIndexRoute
   RiderIndexRoute: typeof RiderIndexRoute
   CustomerTrackIdRoute: typeof CustomerTrackIdRoute
+  RiderJobIdRoute: typeof RiderJobIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerBookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rider/job/$id': {
+      id: '/rider/job/$id'
+      path: '/rider/job/$id'
+      fullPath: '/rider/job/$id'
+      preLoaderRoute: typeof RiderJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/customer/track/$id': {
       id: '/customer/track/$id'
       path: '/customer/track/$id'
@@ -204,6 +224,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustomerIndexRoute: CustomerIndexRoute,
   RiderIndexRoute: RiderIndexRoute,
   CustomerTrackIdRoute: CustomerTrackIdRoute,
+  RiderJobIdRoute: RiderJobIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
