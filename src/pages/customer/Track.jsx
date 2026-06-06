@@ -6,6 +6,11 @@ import { DeliveryMap } from '@/components/delivery-map'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { useStore, advanceCourier, updateDeliveryStatus, STATUS_LABEL } from '@/lib/mock-store'
 
+function formatTime(ts) {
+  if (!ts) return null
+  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
 export default function Track() {
   const user = useRequireAuth('customer')
   const { id } = useParams()
@@ -145,7 +150,14 @@ export default function Track() {
                         >
                           <Icon className="h-3.5 w-3.5" />
                         </span>
-                        <span className={`text-sm ${done ? 'font-bold text-navy' : 'text-slate-400'}`}>{s.label}</span>
+                        <div>
+                          <p className={`text-sm ${done ? 'font-bold text-navy' : 'text-slate-400'}`}>{s.label}</p>
+                          {done && delivery.statusTimestamps?.[s.key] && (
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              {formatTime(delivery.statusTimestamps[s.key])}
+                            </p>
+                          )}
+                        </div>
                       </li>
                     )
                   })}

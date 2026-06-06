@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { LayoutDashboard, PackagePlus, History, Wallet } from 'lucide-react'
+import { LayoutDashboard, PackagePlus, History, Wallet, Bell } from 'lucide-react'
 import { getCurrentUser, signOut, useStore, resetDemo } from '@/lib/mock-store'
 
 const CUSTOMER_LINKS = [
@@ -57,6 +57,12 @@ export function AppShell({ children }) {
           </div>
 
           <div className="flex items-center gap-4">
+            {mounted && session && (
+              <button className="relative p-2 rounded-full hover:bg-surface-100 transition-colors" aria-label="Notifications">
+                <Bell className="h-5 w-5 text-slate-500" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
+              </button>
+            )}
             {mounted && session && (
               <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const STORAGE_KEY = 'dashpoint-store-v1'
+const SESSION_KEY = 'dashpoint-session'
 
 const SEED_USERS = [
   { id: 'u-cust-1', name: 'Ada Lovelace', email: 'ada@demo.io', role: 'customer' },
@@ -36,6 +37,16 @@ function seedDeliveries() {
     riderName,
   ) => {
     const km = distance(p, d)
+    const createdAt = Date.now() - Math.random() * 86400000
+    const ORDER = ['pending', 'accepted', 'picked_up', 'in_transit', 'delivered']
+    const reached = (s) => ORDER.indexOf(status) >= ORDER.indexOf(s)
+    const statusTimestamps = {
+      pending: createdAt,
+      ...(reached('accepted')  ? { accepted:  createdAt + 2  * 60000 } : {}),
+      ...(reached('picked_up') ? { picked_up: createdAt + 7  * 60000 } : {}),
+      ...(reached('in_transit')? { in_transit:createdAt + 10 * 60000 } : {}),
+      ...(reached('delivered') ? { delivered: createdAt + 25 * 60000 } : {}),
+    }
     return {
       id,
       customerId,
@@ -48,7 +59,8 @@ function seedDeliveries() {
       price: Math.round(km * 3 + (pkg === 'Cargo' ? 8 : pkg === 'Express' ? 4 : 2)),
       distanceKm: Math.round(km * 10) / 10,
       status,
-      createdAt: Date.now() - Math.random() * 86400000,
+      createdAt,
+      statusTimestamps,
       etaMinutes: Math.max(5, Math.round(km * 4)),
       courierPosition: status === 'in_transit' || status === 'picked_up' ? p : undefined,
     }
@@ -73,7 +85,13 @@ const listeners = new Set()
 function persist() {
   if (typeof window === 'undefined') return
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+    const { session, ...data } = store
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    if (session) {
+      window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    } else {
+      window.sessionStorage.removeItem(SESSION_KEY)
+    }
   } catch {}
 }
 
@@ -82,7 +100,15 @@ function hydrate() {
   hydrated = true
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw) store = JSON.parse(raw)
+    if (raw) {
+      const { users, deliveries } = JSON.parse(raw)
+      store.users = users ?? store.users
+      store.deliveries = deliveries ?? store.deliveries
+    }
+  } catch {}
+  try {
+    const rawSession = window.sessionStorage.getItem(SESSION_KEY)
+    if (rawSession) store.session = JSON.parse(rawSession)
   } catch {}
 }
 
@@ -162,6 +188,7 @@ export function createDelivery(input) {
     distanceKm: Math.round(km * 10) / 10,
     status: 'pending',
     createdAt: Date.now(),
+    statusTimestamps: { pending: Date.now() },
     etaMinutes: Math.max(5, Math.round(km * 4)),
   }
   store.deliveries = [d, ...store.deliveries]
@@ -172,7 +199,7 @@ export function createDelivery(input) {
 export function updateDeliveryStatus(id, status, riderId, riderName) {
   store.deliveries = store.deliveries.map((d) => {
     if (d.id !== id) return d
-    const next = { ...d, status }
+    const next = { ...d, status, statusTimestamps: { ...(d.statusTimestamps ?? {}), [status]: Date.now() } }
     if (riderId) {
       next.riderId = riderId
       next.riderName = riderName
@@ -206,7 +233,10 @@ export function advanceCourier(id, fraction) {
 
 export function resetDemo() {
   store = defaultStore()
-  if (typeof window !== 'undefined') window.localStorage.removeItem(STORAGE_KEY)
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem(STORAGE_KEY)
+    window.sessionStorage.removeItem(SESSION_KEY)
+  }
   emit()
 }
 
