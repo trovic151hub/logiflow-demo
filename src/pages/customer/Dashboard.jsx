@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Wallet, MapPin, CheckCircle, Package, Gift, PackagePlus, History, Clock } from 'lucide-react'
+import { Wallet, MapPin, CheckCircle, Package, Gift, PackagePlus, History, Clock, ArrowRight } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { useStore, STATUS_LABEL } from '@/lib/mock-store'
@@ -77,8 +77,8 @@ export default function CustomerDashboard() {
                 <p className="font-display text-lg font-bold">Get 20% Off</p>
                 <p className="text-sm text-white/70 mt-0.5">On your next 3 deliveries</p>
               </div>
-              <button className="shrink-0 rounded-full bg-white px-4 py-1.5 text-xs font-bold text-brand hover:bg-white/90 transition-colors">
-                Claim Now
+              <button className="shrink-0 flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-black/10 hover:bg-white/30 hover:scale-105 active:scale-95 transition-all duration-200">
+                Claim Now <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
