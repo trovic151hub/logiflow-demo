@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { MapPin, Zap, Package, Leaf, ArrowLeft } from 'lucide-react'
+import { MapPin, Zap, Package, Leaf, ArrowLeft, AlertTriangle } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { createDelivery } from '@/lib/mock-store'
@@ -34,12 +34,16 @@ export default function Book() {
   const [dropoff, setDropoff] = useState('Victoria Island')
   const [pkg, setPkg] = useState('Express')
   const [note, setNote] = useState('')
+  const [weight, setWeight] = useState(5)
+
+  const WEIGHT_MAX = 20
 
   const pickupCoords = useMemo(() => randomNear(LAGOS), [])
   const dropoffCoords = useMemo(() => randomNear(LAGOS), [])
   const km = useMemo(() => Math.round(distance(pickupCoords, dropoffCoords) * 10) / 10, [pickupCoords, dropoffCoords])
   const selectedType = PACKAGE_TYPES.find((p) => p.id === pkg)
-  const price = Math.round(km * 3 + selectedType.surcharge)
+  const weightSurcharge = weight > WEIGHT_MAX ? Math.round((weight - WEIGHT_MAX) * 50) : 0
+  const price = Math.round(km * 3 + selectedType.surcharge + weightSurcharge)
   const eta = Math.max(5, Math.round(km * 4))
 
   if (!user) return null
@@ -125,6 +129,40 @@ export default function Book() {
                 )
               })}
             </div>
+          </div>
+
+          {/* Weight slider */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Package weight</label>
+              <span className={`text-sm font-bold tabular-nums ${weight > WEIGHT_MAX ? 'text-orange-500' : 'text-navy'}`}>
+                {weight} kg
+              </span>
+            </div>
+            <input
+              type="range"
+              min={1}
+              max={50}
+              value={weight}
+              onChange={(e) => setWeight(Number(e.target.value))}
+              className="w-full accent-brand h-2 cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] text-slate-400">
+              <span>1 kg</span>
+              <span className="text-orange-400 font-semibold">+charges after {WEIGHT_MAX} kg</span>
+              <span>50 kg</span>
+            </div>
+            {weight > WEIGHT_MAX && (
+              <div className="flex items-start gap-2 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3">
+                <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-orange-700">Additional charges apply</p>
+                  <p className="text-xs text-orange-600 mt-0.5">
+                    Items over {WEIGHT_MAX} kg incur an extra ₦{weightSurcharge} weight fee.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Note for rider */}

@@ -64,7 +64,7 @@ export default function Onboarding() {
       <div className="flex flex-col items-center gap-8 text-center">
         <div className="h-40 w-40 rounded-full bg-surface-200" />
         <div className="max-w-xs">
-          <h2 className="font-display text-2xl font-bold text-navy">{slide.title}</h2>
+          <h2 className="font-display text-xl sm:text-2xl font-bold text-navy">{slide.title}</h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-500">{slide.description}</p>
         </div>
       </div>

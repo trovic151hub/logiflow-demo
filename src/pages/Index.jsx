@@ -14,7 +14,7 @@ export default function Index() {
         </span>
       </div>
 
-      <h1 className="font-display max-w-xl text-5xl font-extrabold leading-tight tracking-tight text-navy">
+      <h1 className="font-display max-w-xl text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-navy">
         Last-mile delivery,{' '}
         <span className="text-brand">on demand.</span>
       </h1>

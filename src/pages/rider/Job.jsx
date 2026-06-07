@@ -46,7 +46,7 @@ export default function RiderJob() {
   return (
     <AppShell>
       <main className="p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <section className="lg:col-span-8 h-[70vh]">
+        <section className="lg:col-span-8 h-[50vh] sm:h-[60vh] lg:h-[70vh]">
           <DeliveryMap
             pickup={delivery.pickup.coords}
             dropoff={delivery.dropoff.coords}

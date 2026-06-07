@@ -51,7 +51,7 @@ export default function CustomerDashboard() {
           </div>
 
           {/* Gradient stat cards */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="rounded-2xl bg-gradient-to-br from-brand to-blue-400 p-4 text-white shadow-lg">
               <Package className="h-5 w-5 opacity-80" />
               <p className="mt-3 font-display text-3xl font-bold">{active.length}</p>
@@ -132,7 +132,7 @@ export default function CustomerDashboard() {
           {/* Quick Actions */}
           <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm">
             <h3 className="font-display text-sm font-bold uppercase tracking-wider mb-5">Quick Actions</h3>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {QUICK_ACTIONS.map(({ label, Icon, to, color }) => (
                 <Link key={label} to={to} className="flex flex-col items-center gap-2 group">
                   <div className={`${color} flex h-14 w-14 items-center justify-center rounded-2xl shadow-md group-hover:scale-105 transition-transform`}>

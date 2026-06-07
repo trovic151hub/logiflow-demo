@@ -157,4 +157,13 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }
+
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
 }

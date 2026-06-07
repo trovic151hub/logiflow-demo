@@ -30,10 +30,10 @@ export function AppShell({ children }) {
 
   return (
     <div className="min-h-screen bg-surface-100 text-navy flex flex-col">
-      <nav className="sticky top-0 z-50 border-b border-surface-200 bg-white px-6 py-4">
+      <nav className="sticky top-0 z-50 border-b border-surface-200 bg-white px-6 py-4 relative">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link to="/" className="font-display text-2xl font-bold tracking-tight text-brand">
+            <Link to="/" className="font-display text-lg sm:text-2xl font-bold tracking-tight text-brand">
               DASHPOINT
             </Link>
             {session && (
@@ -56,15 +56,15 @@ export function AppShell({ children }) {
             )}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {mounted && session && (
-              <button className="relative p-2 rounded-full hover:bg-surface-100 transition-colors" aria-label="Notifications">
+              <button className="relative p-2 rounded-full hover:bg-surface-100 transition-colors hidden sm:block" aria-label="Notifications">
                 <Bell className="h-5 w-5 text-slate-500" />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
               </button>
             )}
             {mounted && session && (
-              <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand flex items-center gap-1.5">
+              <span className="hidden sm:flex rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />
                 {session.role === 'rider' ? 'Rider Online' : 'Customer'}
               </span>
@@ -72,7 +72,7 @@ export function AppShell({ children }) {
 
             {mounted && user ? (
               <>
-                <div className="hidden sm:flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-brand/10 flex items-center justify-center shrink-0">
                     <span className="text-xs font-bold text-brand">{initials}</span>
                   </div>
@@ -83,7 +83,7 @@ export function AppShell({ children }) {
                     signOut()
                     navigate('/auth')
                   }}
-                  className="rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-surface-100"
+                  className="hidden sm:block rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-surface-100"
                 >
                   Sign out
                 </button>
@@ -100,7 +100,7 @@ export function AppShell({ children }) {
             {session && (
               <button
                 onClick={() => setMobileOpen((o) => !o)}
-                className="md:hidden flex flex-col justify-center gap-1.5 p-1"
+                className="md:hidden flex flex-col justify-center gap-1.5 p-2"
                 aria-label="Toggle menu"
               >
                 <span className={`block h-0.5 w-5 bg-navy transition-transform ${mobileOpen ? 'translate-y-2 rotate-45' : ''}`} />
@@ -112,7 +112,7 @@ export function AppShell({ children }) {
         </div>
 
         {session && mobileOpen && (
-          <div className="md:hidden border-t border-surface-200 pt-4 mt-4 flex flex-col gap-3">
+          <div className="md:hidden absolute top-full left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-surface-200/60 px-6 py-4 shadow-lg flex flex-col gap-3">
             {links.map(({ to, label, Icon }) => (
               <Link
                 key={to}
@@ -126,6 +126,21 @@ export function AppShell({ children }) {
                 {label}
               </Link>
             ))}
+            <div className="pt-2 border-t border-surface-200 flex items-center justify-between">
+              {user && (
+                <span className="text-sm font-bold">{user.name.split(' ')[0]}</span>
+              )}
+              <button
+                onClick={() => {
+                  setMobileOpen(false)
+                  signOut()
+                  navigate('/auth')
+                }}
+                className="rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-surface-100"
+              >
+                Sign out
+              </button>
+            </div>
           </div>
         )}
       </nav>

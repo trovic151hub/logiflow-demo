@@ -107,7 +107,7 @@ export default function Track() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <section className="lg:col-span-8 relative h-[70vh]">
+          <section className="lg:col-span-8 relative h-[50vh] sm:h-[60vh] lg:h-[70vh]">
             <DeliveryMap
               pickup={delivery.pickup.coords}
               dropoff={delivery.dropoff.coords}
