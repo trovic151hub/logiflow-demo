@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import 'leaflet/dist/leaflet.css';
 
 @import "@fontsource/space-grotesk/600.css";
 @import "@fontsource/space-grotesk/700.css";
@@ -152,18 +153,42 @@
     border-color: var(--color-border);
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }
 
+  /* Slim, smooth scrollbar — visible but unobtrusive */
   * {
-    scrollbar-width: none;
+   
+     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
   *::-webkit-scrollbar {
-    display: none;
+   display:none
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 99px;
+    transition: background 0.2s ease;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.65);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
   }
 }

@@ -5,11 +5,16 @@ const SESSION_KEY = 'dashpoint-session'
 
 const SEED_USERS = [
   { id: 'u-cust-1', name: 'Ada Lovelace', email: 'ada@demo.io', role: 'customer' },
-  { id: 'u-rider-1', name: 'Marcus Chen', email: 'marcus@demo.io', role: 'rider', rating: 4.9, trips: 1240 },
+  { id: 'u-cust-2', name: 'John Smith', email: 'john@demo.io', role: 'customer' },
 ]
 
 const LAGOS = { lat: 6.5244, lng: 3.3792 }
 const offset = (base, dLat, dLng) => ({ lat: base.lat + dLat, lng: base.lng + dLng })
+
+// Generate unique tracking IDs
+function generateTrackingId() {
+  return 'TRK-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 7).toUpperCase()
+}
 
 function distance(a, b) {
   const R = 6371
@@ -33,8 +38,6 @@ function seedDeliveries() {
     pkg,
     customerName = 'Ada Lovelace',
     customerId = 'u-cust-1',
-    riderId,
-    riderName,
   ) => {
     const km = distance(p, d)
     const createdAt = Date.now() - Math.random() * 86400000
@@ -49,10 +52,9 @@ function seedDeliveries() {
     }
     return {
       id,
+      trackingId: generateTrackingId(),
       customerId,
       customerName,
-      riderId,
-      riderName,
       pickup: { address: pickupAddr, coords: p },
       dropoff: { address: dropAddr, coords: d },
       packageType: pkg,
@@ -66,8 +68,8 @@ function seedDeliveries() {
     }
   }
   return [
-    make('DP-9021', 'in_transit', 'Lekki Phase 1', 'Victoria Island', offset(base, 0.02, 0.04), offset(base, -0.01, 0.01), 'Express', 'Ada Lovelace', 'u-cust-1', 'u-rider-1', 'Marcus Chen'),
-    make('DP-8829', 'delivered', 'Ikeja City Mall', 'Yaba Tech', offset(base, 0.08, -0.05), offset(base, 0.04, -0.02), 'Cargo', 'Ada Lovelace', 'u-cust-1', 'u-rider-1', 'Marcus Chen'),
+    make('DP-9021', 'in_transit', 'Lekki Phase 1', 'Victoria Island', offset(base, 0.02, 0.04), offset(base, -0.01, 0.01), 'Express', 'Ada Lovelace', 'u-cust-1'),
+    make('DP-8829', 'delivered', 'Ikeja City Mall', 'Yaba Tech', offset(base, 0.08, -0.05), offset(base, 0.04, -0.02), 'Cargo', 'Ada Lovelace', 'u-cust-1'),
     make('DP-7710', 'pending', 'Surulere', 'Ikoyi', offset(base, 0.03, -0.04), offset(base, -0.005, 0.02), 'Express'),
     make('DP-7702', 'pending', 'Pharmacy Plus, Maryland', 'Magodo Estate', offset(base, 0.06, 0.01), offset(base, 0.08, 0.04), 'Express'),
     make('DP-7698', 'pending', 'Computer Village', 'Lekki Phase 2', offset(base, 0.075, -0.045), offset(base, 0.015, 0.06), 'Cargo'),
@@ -179,6 +181,7 @@ export function createDelivery(input) {
   const km = distance(input.pickup.coords, input.dropoff.coords)
   const d = {
     id: `DP-${Math.floor(1000 + Math.random() * 9000)}`,
+    trackingId: generateTrackingId(),
     customerId: input.customerId,
     customerName: input.customerName,
     pickup: input.pickup,

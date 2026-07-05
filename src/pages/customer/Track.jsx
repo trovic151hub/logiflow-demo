@@ -12,7 +12,7 @@ function formatTime(ts) {
 }
 
 export default function Track() {
-  const user = useRequireAuth('customer')
+  const user = useRequireAuth()
   const { id } = useParams()
   const navigate = useNavigate()
   const delivery = useStore((s) => s.deliveries.find((d) => d.id === id))
@@ -76,7 +76,7 @@ export default function Track() {
 
   return (
     <AppShell>
-      <main className="p-6 max-w-7xl mx-auto">
+      <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
         <button
           onClick={() => navigate('/customer')}
           className="mb-4 flex items-center gap-1 text-sm text-slate-500 hover:text-navy transition-colors"

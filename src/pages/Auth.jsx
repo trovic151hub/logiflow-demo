@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, User, Phone, ChevronLeft } from 'lucide-react'
-import { signIn, getCurrentUser } from '@/lib/mock-store'
+import { signIn, getCurrentUser, signUp } from '@/lib/mock-store'
 
 export default function Auth() {
   const navigate = useNavigate()
@@ -20,7 +20,7 @@ export default function Auth() {
   useEffect(() => {
     const user = getCurrentUser()
     if (user) {
-      navigate(user.role === 'rider' ? '/rider' : '/customer', { replace: true })
+      navigate('/customer', { replace: true })
     }
   }, [navigate])
 
@@ -38,17 +38,18 @@ export default function Auth() {
       setError('No account found with that email. Please sign up.')
       return
     }
-    navigate(user.role === 'rider' ? '/rider' : '/customer')
+    navigate('/customer')
   }
 
   function handleSignUp(e) {
     e.preventDefault()
     setError('')
-    if (!name.trim() || !signupEmail.trim()) {
-      setError('Please enter your name and email.')
+    if (!name.trim() || !signupEmail.trim() || !signupPassword.trim()) {
+      setError('Please fill in all required fields.')
       return
     }
-    navigate('/choose-role', { state: { name: name.trim(), email: signupEmail.trim(), phone } })
+    const user = signUp(name.trim(), signupEmail.trim(), 'customer')
+    navigate('/customer')
   }
 
   return (
