@@ -327,6 +327,7 @@ export default function Book() {
       dropoff: { address: confirmedDropoff, coords: dropoffCoords },
       packageType: pkg,
     })
+    navigator.clipboard?.writeText(delivery.trackingId)
     navigate('/customer/track/' + delivery.id)
   }
 
@@ -472,7 +473,16 @@ function AddressField({ type }) {
 
           {/* Active border is on this inner row only */}
           <div
-            onClick={() => inputRef.current?.focus()}
+            onMouseDown={() => {
+              setFocused(true)
+              setShow(true)
+              requestAnimationFrame(() => inputRef.current?.focus())
+            }}
+            onClick={() => {
+              setFocused(true)
+              setShow(true)
+              inputRef.current?.focus()
+            }}
             className={[
               'flex min-w-0 cursor-text items-center gap-2 rounded-2xl border bg-slate-50 px-3 py-2 transition-all duration-150',
               focused
@@ -487,7 +497,10 @@ function AddressField({ type }) {
               autoComplete="off"
               spellCheck={false}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setShow(true)
+              }}
               onFocus={() => {
                 setFocused(true)
                 setShow(true)
@@ -498,6 +511,8 @@ function AddressField({ type }) {
                 setTimeout(() => setShow(false), 150)
               }}
               placeholder={`Enter ${label.toLowerCase()} address`}
+              autoCapitalize="words"
+              autoCorrect="off"
               className="min-w-0 w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
             />
             {query ? (
@@ -776,24 +791,6 @@ function AddressField({ type }) {
                 <span className="text-[8px] font-bold uppercase tracking-widest text-white">Map</span>
               </div>
             </button>
-            <div className="grid w-16 gap-2">
-              <button
-                type="button"
-                onClick={zoomIn}
-                className="h-9 rounded-full bg-white/95 text-slate-700 shadow-md ring-1 ring-slate-200 hover:bg-slate-100"
-                aria-label="Zoom in"
-              >
-                +
-              </button>
-              <button
-                type="button"
-                onClick={zoomOut}
-                className="h-9 rounded-full bg-white/95 text-slate-700 shadow-md ring-1 ring-slate-200 hover:bg-slate-100"
-                aria-label="Zoom out"
-              >
-                −
-              </button>
-            </div>
           </div>
         )}
 

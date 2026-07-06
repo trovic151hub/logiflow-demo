@@ -1,6 +1,6 @@
-import { Link, useParams, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
-import { Phone, X, CheckCircle, ArrowLeft, ClipboardList, UserCheck, Package, Truck } from 'lucide-react'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Phone, X, CheckCircle, ArrowLeft, ClipboardList, UserCheck, Package, Truck, Copy, MapPinned } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { DeliveryMap } from '@/components/delivery-map'
 import { useRequireAuth } from '@/lib/use-require-auth'
@@ -15,7 +15,11 @@ export default function Track() {
   const user = useRequireAuth()
   const { id } = useParams()
   const navigate = useNavigate()
-  const delivery = useStore((s) => s.deliveries.find((d) => d.id === id))
+  const location = useLocation()
+  const [copied, setCopied] = useState(false)
+  const deliveries = useStore((s) => (user ? s.deliveries.filter((d) => d.customerId === user.id) : []))
+  const delivery = useStore((s) => s.deliveries.find((d) => d.id === id || d.trackingId === id))
+  const trackingId = location.state?.trackingId ?? delivery?.trackingId ?? id
 
   useEffect(() => {
     if (!delivery) return
@@ -47,11 +51,87 @@ export default function Track() {
     }
   }, [delivery?.status, id])
 
+  useEffect(() => {
+    if (!copied) return
+    const timeout = window.setTimeout(() => setCopied(false), 1800)
+    return () => window.clearTimeout(timeout)
+  }, [copied])
+
+  function handleCopy() {
+    if (!trackingId) return
+    navigator.clipboard?.writeText(trackingId).then(() => setCopied(true))
+  }
+
   if (!user) return null
+
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/customer')
+    }
+  }
+
+  if (!id) {
+    const orderedDeliveries = [...deliveries].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+
+    return (
+      <AppShell>
+        <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mb-6 flex flex-col gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em]  text-center text-slate-400">Track hub</p>
+            <h1 className="text-2xl text-center font-bold text-slate-900">Your deliveries</h1>
+            <p className="text-sm  text-center text-slate-500">Open any order to view its live status and route.</p>
+          </div>
+
+          <div className="space-y-3">
+            {orderedDeliveries.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm">
+                No deliveries yet. Book a shipment to start tracking it.
+              </div>
+            ) : (
+              orderedDeliveries.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-slate-900">{item.id}</p>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                          {STATUS_LABEL[item.status]}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-500">{item.pickup.address} → {item.dropoff.address}</p>
+                      <p className="mt-1 text-xs text-slate-400">Tracking ID · {item.trackingId}</p>
+                    </div>
+                    <Link
+                      to={`/customer/track/${item.id}`}
+                      className="inline-flex w-fit items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                    >
+                      Track
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </main>
+      </AppShell>
+    )
+  }
+
   if (!delivery)
     return (
       <AppShell>
-        <main className="p-12 text-center text-slate-500">Delivery not found.</main>
+        <main className="mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center px-6 py-12 text-center">
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-slate-500">
+            <MapPinned className="h-8 w-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">No shipment found</h1>
+          <p className="mt-2 text-sm text-slate-500">This tracking link does not match a live delivery yet.</p>
+          <button onClick={handleBack} className="mt-6 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900">
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+        </main>
       </AppShell>
     )
 
@@ -78,10 +158,12 @@ export default function Track() {
     <AppShell>
       <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
         <button
-          onClick={() => navigate('/customer')}
-          className="mb-4 flex items-center gap-1 text-sm text-slate-500 hover:text-navy transition-colors"
+          type="button"
+          onClick={handleBack}
+          aria-label="Go back"
+          className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to dashboard
+          <ArrowLeft className="h-4 w-4" />
         </button>
 
         {/* Delivered banner */}
@@ -123,10 +205,18 @@ export default function Track() {
           <aside className="lg:col-span-4 space-y-6">
             {/* Status card */}
             <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Status</p>
-              <p className={`mt-1 font-display text-2xl font-bold ${isCancelled ? 'text-red-500' : isDelivered ? 'text-success' : 'text-brand'}`}>
-                {STATUS_LABEL[delivery.status]}
-              </p>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Status</p>
+                  <p className={`mt-1 font-display text-2xl font-bold ${isCancelled ? 'text-red-500' : isDelivered ? 'text-success' : 'text-brand'}`}>
+                    {STATUS_LABEL[delivery.status]}
+                  </p>
+                </div>
+                <button onClick={handleCopy} className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
+                  <Copy className="h-3.5 w-3.5" /> {copied ? 'Copied' : 'Copy ID'}
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-slate-500">Tracking ID · {trackingId}</p>
               {!isDelivered && !isCancelled && (
                 <p className="mt-1 text-sm text-slate-500">ETA · {delivery.etaMinutes} min</p>
               )}
@@ -136,11 +226,12 @@ export default function Track() {
                   {steps.map((s, i) => {
                     const done = i <= currentIdx
                     const isCurrent = i === currentIdx && !isDelivered
+                    const timestamp = delivery.statusTimestamps?.[s.key]
                     const { Icon } = s
                     return (
-                      <li key={s.key} className="flex items-center gap-3">
+                      <li key={s.key} className="flex items-start gap-3">
                         <span
-                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
+                          className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
                             done
                               ? isDelivered
                                 ? 'bg-success text-white'
@@ -150,13 +241,11 @@ export default function Track() {
                         >
                           <Icon className="h-3.5 w-3.5" />
                         </span>
-                        <div>
+                        <div className="min-w-0">
                           <p className={`text-sm ${done ? 'font-bold text-navy' : 'text-slate-400'}`}>{s.label}</p>
-                          {done && delivery.statusTimestamps?.[s.key] && (
-                            <p className="text-[10px] text-slate-400 mt-0.5">
-                              {formatTime(delivery.statusTimestamps[s.key])}
-                            </p>
-                          )}
+                          <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                            {timestamp ? formatTime(timestamp) : isCurrent ? 'In progress' : 'Pending'}
+                          </p>
                         </div>
                       </li>
                     )

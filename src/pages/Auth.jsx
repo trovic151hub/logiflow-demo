@@ -48,8 +48,7 @@ export default function Auth() {
       setError('Please fill in all required fields.')
       return
     }
-    const user = signUp(name.trim(), signupEmail.trim(), 'customer')
-    navigate('/customer')
+    navigate('/choose-role', { state: { name: name.trim(), email: signupEmail.trim(), phone: phone.trim() } })
   }
 
   return (

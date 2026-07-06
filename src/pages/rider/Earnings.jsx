@@ -12,6 +12,14 @@ export default function Earnings() {
   )
   if (!user) return null
 
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/rider')
+    }
+  }
+
   const total = completed.reduce((a, d) => a + d.price, 0)
   const avg = completed.length ? Math.round(total / completed.length) : 0
 
@@ -19,10 +27,12 @@ export default function Earnings() {
     <AppShell>
       <main className="p-6 max-w-6xl mx-auto">
         <button
-          onClick={() => navigate('/rider')}
-          className="mb-4 flex items-center gap-1 text-sm text-slate-500 hover:text-navy transition-colors"
+          type="button"
+          onClick={handleBack}
+          aria-label="Go back"
+          className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to dashboard
+          <ArrowLeft className="h-4 w-4" />
         </button>
 
         <h1 className="font-display text-3xl font-bold">Earnings</h1>

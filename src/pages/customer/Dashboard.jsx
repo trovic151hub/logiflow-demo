@@ -13,6 +13,7 @@ import {
   MapPin,
   Search,
   Truck,
+  BellRing,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AppShell } from '@/components/app-shell'
@@ -85,6 +86,8 @@ export default function CustomerDashboard() {
     user ? s.deliveries.filter((d) => d.customerId === user.id) : []
   )
   const [trackingId, setTrackingId] = useState('')
+  const [noticeOpen, setNoticeOpen] = useState(false)
+  const [trackedDelivery, setTrackedDelivery] = useState(null)
 
   const active  = deliveries.filter((d) => d.status !== 'delivered' && d.status !== 'cancelled')
   const pending = deliveries.filter((d) => d.status === 'pending')
@@ -93,7 +96,17 @@ export default function CustomerDashboard() {
 
   function handleTrack(e) {
     e.preventDefault()
-    if (trackingId.trim()) navigate(`/customer/track/${trackingId.trim()}`)
+    const value = trackingId.trim()
+    if (!value) return
+
+    const matched = deliveries.find((item) => item.id === value || item.trackingId === value)
+    if (matched) {
+      setTrackingId('')
+      navigate(`/customer/track/${matched.id}`, { state: { trackingId: matched.trackingId } })
+      return
+    }
+
+    navigate(`/customer/track/${value}`, { state: { trackingId: value } })
   }
 
   return (
@@ -109,6 +122,25 @@ export default function CustomerDashboard() {
         className="w-full mx-auto flex flex-col items-center px-4 sm:px-6 lg:px-8"
          style={{ marginTop: '-2.5rem' , maxWidth: '80em' }}
       >
+        <div className="mb-4 w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <button onClick={() => setNoticeOpen((value) => !value)} className="flex w-full items-start justify-between gap-3 text-left">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                <BellRing className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Live updates are active</p>
+                <p className="text-sm text-slate-500">Your current bookings and delivery progress will appear here as events happen.</p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">{noticeOpen ? 'Hide' : 'Show'}</span>
+          </button>
+          {noticeOpen && (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+              We will surface pickup, in-transit, and delivery notifications for your active shipments in real time.
+            </div>
+          )}
+        </div>
 
         {/* ── Step 1: Overlapping stats + tracking card ──────────── */}
 <div
@@ -122,13 +154,15 @@ export default function CustomerDashboard() {
     lg:w-[70%]
     max-w-xl
     rounded-2xl
+
     bg-white
     shadow-xl
     overflow-hidden
   "
   style={{
-    border: '1px solid #E2E8F0',
+    border: '1px solid #f0e2e3',
     zIndex: 999,
+  
   }}
 >
   {/* Tracking input row */}
@@ -288,7 +322,7 @@ export default function CustomerDashboard() {
 </div>
 
         {/* ── Step 2: Quick actions ────────────────────────────────── */}
-        <section className="mb-6 mt-75 w-full">
+        <section className="mb-6 mt-40 w-full">
           <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-3 px-1">
             Quick actions
           </p>
@@ -387,7 +421,7 @@ export default function CustomerDashboard() {
                     </div>
                     <Link
                       to={`/customer/track/${d.id}`}
-                      className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                      className="shrink-0 rounded-lg border border-slate-200 bg-black text-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
                     >
                       Track
                     </Link>
@@ -398,7 +432,21 @@ export default function CustomerDashboard() {
           </div>
         </section>
       </main>
+
     </AppShell>
+  )
+}
+
+function DeliveryMapPreview({ pickup, dropoff }) {
+  return (
+    <div className="h-full w-full">
+      <iframe
+        title="Route preview"
+        src={`https://www.google.com/maps?q=${pickup.lat},${pickup.lng},${dropoff.lat},${dropoff.lng}&z=12&output=embed`}
+        className="h-full w-full"
+        loading="lazy"
+      />
+    </div>
   )
 }
 
@@ -412,6 +460,7 @@ function TipsCarousel() {
   }, [])
 
   const tip = TIPS[active]
+  const navigate = useNavigate()
 
   return (
     <div
@@ -437,6 +486,12 @@ function TipsCarousel() {
               to={tip.action.to}
               className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold hover:underline"
               style={{ color: '#305CDE' }}
+              onClick={(event) => {
+                if (tip.action.to === '/customer/support/issue') {
+                  event.preventDefault()
+                  navigate('/customer/help')
+                }
+              }}
             >
               {tip.action.label} <ArrowRight className="h-3 w-3" />
             </Link>

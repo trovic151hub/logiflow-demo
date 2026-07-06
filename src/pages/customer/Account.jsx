@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import { User, LogOut, Settings, Shield, MapPin, Phone, Mail, Calendar, ArrowLeft, BarChart3, Bell } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { User, LogOut, Settings, Shield, MapPin, Phone, Mail, Calendar, ArrowLeft, BarChart3, Bell, Check, X } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { signOut } from '@/lib/mock-store'
@@ -7,6 +8,13 @@ import { signOut } from '@/lib/mock-store'
 export default function Account() {
   const user = useRequireAuth()
   const navigate = useNavigate()
+  const [activeModal, setActiveModal] = useState(null)
+  const [email, setEmail] = useState(user?.email ?? '')
+  const [password, setPassword] = useState('')
+  const [preferences, setPreferences] = useState({ email: true, sms: true, marketing: false })
+  const [savedNotice, setSavedNotice] = useState('')
+
+  const preferencesRef = useMemo(() => ({ current: null }), [])
 
   if (!user) return null
 
@@ -15,21 +23,46 @@ export default function Account() {
     navigate('/auth')
   }
 
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/customer')
+    }
+  }
+
+  const openModal = (type) => {
+    setActiveModal(type)
+    setSavedNotice('')
+  }
+
+  const closeModal = () => {
+    setActiveModal(null)
+    setSavedNotice('')
+  }
+
+  const savePreferences = () => {
+    setSavedNotice('Preferences updated successfully.')
+    document.getElementById('preferences')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <AppShell>
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {/* Back button */}
         <button
-          onClick={() => navigate('/customer')}
-          className="flex items-center gap-2 text-sm text-slate-500 hover:text-navy transition-colors"
+          type="button"
+          onClick={handleBack}
+          aria-label="Go back"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to dashboard
+          <ArrowLeft className="h-4 w-4" />
         </button>
 
         {/* Header */}
         <div>
-          <h1 className="font-display text-3xl font-bold">Account Settings</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <h1 className="font-display text-center text-3xl font-bold">Account Settings</h1>
+          <p className="mt-2 text-sm text-center text-slate-500">
             Manage your profile and account preferences
           </p>
         </div>
@@ -81,7 +114,7 @@ export default function Account() {
               <h3 className="font-bold text-slate-700 flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-slate-400" /> Your Activity
               </h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-lg bg-surface-100 p-4 text-center">
                   <p className="text-2xl font-display font-bold text-brand">12</p>
                   <p className="text-xs text-slate-500 mt-1">Total Orders</p>
@@ -90,10 +123,10 @@ export default function Account() {
                   <p className="text-2xl font-display font-bold text-success">8</p>
                   <p className="text-xs text-slate-500 mt-1">Delivered</p>
                 </div>
-                <div className="rounded-lg bg-surface-100 p-4 text-center">
+                {/* <div className="rounded-lg bg-surface-100 p-4 text-center">
                   <p className="text-2xl font-display font-bold text-orange-500">₦4,850</p>
                   <p className="text-xs text-slate-500 mt-1">Total Spent</p>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -103,7 +136,7 @@ export default function Account() {
             <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm space-y-3">
               <h3 className="font-bold text-slate-700">Quick Actions</h3>
               
-              <button className="w-full flex items-center gap-3 rounded-lg border border-surface-200 px-4 py-3 hover:bg-surface-100 transition-colors text-left">
+              <button onClick={() => openModal('password')} className="w-full flex items-center gap-3 rounded-lg border border-surface-200 px-4 py-3 hover:bg-surface-100 transition-colors text-left">
                 <Shield className="h-5 w-5 text-slate-400" />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-700">Change Password</p>
@@ -111,7 +144,7 @@ export default function Account() {
                 </div>
               </button>
 
-              <button className="w-full flex items-center gap-3 rounded-lg border border-surface-200 px-4 py-3 hover:bg-surface-100 transition-colors text-left">
+              <button onClick={() => openModal('email')} className="w-full flex items-center gap-3 rounded-lg border border-surface-200 px-4 py-3 hover:bg-surface-100 transition-colors text-left">
                 <Mail className="h-5 w-5 text-slate-400" />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-700">Update Email</p>
@@ -119,7 +152,7 @@ export default function Account() {
                 </div>
               </button>
 
-              <button className="w-full flex items-center gap-3 rounded-lg border border-surface-200 px-4 py-3 hover:bg-surface-100 transition-colors text-left">
+              <button onClick={() => openModal('notifications')} className="w-full flex items-center gap-3 rounded-lg border border-surface-200 px-4 py-3 hover:bg-surface-100 transition-colors text-left">
                 <Bell className="h-5 w-5 text-slate-400" />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-700">Notifications</p>
@@ -142,7 +175,7 @@ export default function Account() {
         </div>
 
         {/* Preferences section */}
-        <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm space-y-6">
+        <div id="preferences" className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm space-y-6">
           <div>
             <h2 className="font-display text-lg font-bold flex items-center gap-2">
               <Settings className="h-5 w-5 text-brand" /> Preferences
@@ -150,9 +183,11 @@ export default function Account() {
             <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">Customize your experience</p>
           </div>
 
+          {savedNotice && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{savedNotice}</div>}
+
           <div className="space-y-4">
             <label className="flex items-center gap-3 rounded-lg border border-surface-200 p-4 hover:bg-surface-100 cursor-pointer">
-              <input type="checkbox" defaultChecked className="h-4 w-4 rounded text-brand" />
+              <input type="checkbox" checked={preferences.email} onChange={() => setPreferences((prev) => ({ ...prev, email: !prev.email }))} className="h-4 w-4 rounded text-brand" />
               <div>
                 <p className="text-sm font-semibold text-slate-700">Email notifications</p>
                 <p className="text-xs text-slate-500">Get updates about your orders</p>
@@ -160,7 +195,7 @@ export default function Account() {
             </label>
 
             <label className="flex items-center gap-3 rounded-lg border border-surface-200 p-4 hover:bg-surface-100 cursor-pointer">
-              <input type="checkbox" defaultChecked className="h-4 w-4 rounded text-brand" />
+              <input type="checkbox" checked={preferences.sms} onChange={() => setPreferences((prev) => ({ ...prev, sms: !prev.sms }))} className="h-4 w-4 rounded text-brand" />
               <div>
                 <p className="text-sm font-semibold text-slate-700">SMS notifications</p>
                 <p className="text-xs text-slate-500">Receive text messages for deliveries</p>
@@ -168,15 +203,61 @@ export default function Account() {
             </label>
 
             <label className="flex items-center gap-3 rounded-lg border border-surface-200 p-4 hover:bg-surface-100 cursor-pointer">
-              <input type="checkbox" className="h-4 w-4 rounded text-brand" />
+              <input type="checkbox" checked={preferences.marketing} onChange={() => setPreferences((prev) => ({ ...prev, marketing: !prev.marketing }))} className="h-4 w-4 rounded text-brand" />
               <div>
                 <p className="text-sm font-semibold text-slate-700">Marketing emails</p>
                 <p className="text-xs text-slate-500">Receive special offers and promotions</p>
               </div>
             </label>
           </div>
+
+       <div className='w-full flex items-center justify-center'>
+           <button onClick={savePreferences} className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-hover">
+            <Check className="h-4 w-4" /> Confirm preferences
+          </button>
+       </div>
         </div>
       </main>
+
+      {activeModal && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{activeModal === 'password' ? 'Change password' : activeModal === 'email' ? 'Update email' : 'Notification preferences'}</p>
+                <p className="mt-1 text-sm text-slate-500">{activeModal === 'password' ? 'Set a new password for your account.' : activeModal === 'email' ? 'Use a new email address for updates.' : 'Choose how you want alerts delivered.'}</p>
+              </div>
+              <button onClick={closeModal} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {activeModal === 'password' ? (
+              <div className="space-y-4">
+                <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter new password" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-brand" />
+                <button onClick={closeModal} className="w-full rounded-full bg-brand px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-hover">Save password</button>
+              </div>
+            ) : activeModal === 'email' ? (
+              <div className="space-y-4">
+                <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter new email" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-brand" />
+                <button onClick={closeModal} className="w-full rounded-full bg-brand px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-hover">Save email</button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                  <input type="checkbox" checked={preferences.email} onChange={() => setPreferences((prev) => ({ ...prev, email: !prev.email }))} className="h-4 w-4 rounded text-brand" />
+                  <span className="text-sm text-slate-700">Email pushes</span>
+                </label>
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                  <input type="checkbox" checked={preferences.sms} onChange={() => setPreferences((prev) => ({ ...prev, sms: !prev.sms }))} className="h-4 w-4 rounded text-brand" />
+                  <span className="text-sm text-slate-700">SMS updates</span>
+                </label>
+                <button onClick={closeModal} className="w-full rounded-full bg-brand px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-hover">Confirm</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </AppShell>
   )
 }

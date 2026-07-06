@@ -1,15 +1,38 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigationType } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useLayoutEffect } from 'react'
 import Index from './pages/Index'
 import Onboarding from './pages/Onboarding'
 import Auth from './pages/Auth'
 import CustomerDashboard from './pages/customer/Dashboard'
 import Book from './pages/customer/Book'
 import Track from './pages/customer/Track'
+import NotificationsPage from './pages/customer/Notifications'
 import History from './pages/customer/History'
 import Account from './pages/customer/Account'
+import Help from './pages/customer/Help'
+import ChooseRole from './pages/ChooseRole'
+import RiderDashboard from './pages/rider/Dashboard'
+import RiderJob from './pages/rider/Job'
 
 const queryClient = new QueryClient()
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  const navigationType = useNavigationType()
+
+  useLayoutEffect(() => {
+    if (navigationType === 'POP') return
+
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [pathname, navigationType])
+
+  return null
+}
 
 function NotFound() {
   return (
@@ -37,15 +60,22 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/customer" element={<CustomerDashboard />} />
           <Route path="/customer/book" element={<Book />} />
+          <Route path="/customer/notifications" element={<NotificationsPage />} />
           <Route path="/customer/history" element={<History />} />
+          <Route path="/customer/track" element={<Track />} />
           <Route path="/customer/track/:id" element={<Track />} />
           <Route path="/customer/account" element={<Account />} />
+          <Route path="/customer/help" element={<Help />} />
+          <Route path="/choose-role" element={<ChooseRole />} />
+          <Route path="/rider" element={<RiderDashboard />} />
+          <Route path="/rider/job/:id" element={<RiderJob />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

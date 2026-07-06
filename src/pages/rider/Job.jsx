@@ -16,6 +16,14 @@ export default function RiderJob() {
   const user = useRequireAuth('rider')
   const navigate = useNavigate()
   const { id } = useParams()
+
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/rider')
+    }
+  }
   const delivery = useStore((s) => s.deliveries.find((d) => d.id === id))
   const [autoMove, setAutoMove] = useState(true)
 
@@ -57,10 +65,12 @@ export default function RiderJob() {
 
         <aside className="lg:col-span-4 space-y-6">
           <button
-            onClick={() => navigate('/rider')}
-            className="flex items-center gap-1 text-sm text-slate-500 hover:text-navy transition-colors"
+            type="button"
+            onClick={handleBack}
+            aria-label="Go back"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to dashboard
+            <ArrowLeft className="h-4 w-4" />
           </button>
 
           <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm">
