@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   MapPin, Zap, Package, Leaf, ArrowLeft, ArrowRight,
@@ -22,7 +22,131 @@ L.Icon.Default.mergeOptions({
   shadowUrl:
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
+// import { useState, useEffect } from 'react'
+// import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 
+function WeightSlider({ weight, setWeight, wMeta, weightSurcharge }) {
+  const pct = Math.round(((weight - 1) / 49) * 100)
+  const thresholdPct = Math.round(((20 - 1) / 49) * 100)
+
+  // Local buffer so the field can hold "" or a half-typed value while editing,
+  // instead of being clamped (and visibly reset) on every keystroke. Commits
+  // back to `weight` only on blur / Enter.
+  const [inputValue, setInputValue] = useState(String(weight))
+  useEffect(() => {
+    setInputValue(String(weight))
+  }, [weight])
+
+  function commitInput(raw) {
+    if (raw === '') {
+      setInputValue(String(weight))
+      return
+    }
+
+    const parsed = Number(raw)
+    const clamped = Number.isFinite(parsed) ? Math.min(50, Math.max(1, Math.round(parsed))) : weight
+    setWeight(clamped)
+    setInputValue(String(clamped))
+  }
+
+  function handleInputChange(raw) {
+    setInputValue(raw)
+
+    if (raw === '') return
+
+    const parsed = Number(raw)
+    if (!Number.isFinite(parsed)) return
+
+    const clamped = Math.min(50, Math.max(1, Math.round(parsed)))
+    setWeight(clamped)
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-slate-800">Package weight</p>
+        <span
+          className="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
+          style={{ background: wMeta.bg, borderColor: wMeta.border, color: wMeta.text }}
+        >
+          {wMeta.label}
+        </span>
+      </div>
+
+      {/* taller hit area (h-8 vs h-5) makes dragging easier to grab, track stays visually h-2 */}
+      <div className="relative mb-1 flex h-8 items-center">
+        <div className="absolute inset-x-0 h-2 rounded-full bg-slate-200 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-[width] duration-75"
+            style={{ width: `${pct}%`, background: wMeta.color }}
+          />
+        </div>
+        <div
+          className="absolute top-0 bottom-0 flex items-center pointer-events-none"
+          style={{ left: `${thresholdPct}%` }}
+        >
+          <div className="h-4 w-px bg-slate-400 opacity-60" />
+        </div>
+        {/* touchAction: 'none' stops touch-drag from being swallowed as a page scroll */}
+        <input
+          type="range"
+          min={1}
+          max={50}
+          step={1}
+          value={weight}
+          onChange={(e) => setWeight(Number(e.target.value))}
+          className="absolute inset-x-0 h-full w-full cursor-pointer opacity-0"
+          style={{ zIndex: 2, touchAction: 'none' }}
+        />
+        <div
+          className="pointer-events-none absolute top-1/2 -translate-y-1/2 h-5 w-5 rounded-full border-2 border-white shadow-md"
+          style={{ left: `calc(${pct}% - 10px)`, background: wMeta.color, zIndex: 1 }}
+        />
+      </div>
+
+      <div className="flex justify-between text-[10px] text-slate-400 mb-4">
+        <span>1 kg</span>
+        <span className="flex items-center gap-1">
+          <span className="h-1.5 w-px bg-slate-400" />
+          20 kg limit
+        </span>
+        <span>50 kg</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2">
+          <input
+            type="number"
+            min={1}
+            max={50}
+            value={inputValue}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onBlur={(e) => commitInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+            className="w-14 bg-transparent text-sm font-bold text-slate-800 outline-none"
+          />
+          <span className="text-xs text-slate-400">kg</span>
+        </div>
+        <div
+          className="flex flex-1 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium"
+          style={{ background: wMeta.bg, borderColor: wMeta.border, color: wMeta.text }}
+        >
+          {weight > 20 ? (
+            <>
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              Extra charge: ₦{weightSurcharge}
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              No surcharge
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 const makePin = (color) =>
   new L.DivIcon({
     html: `<div style="
@@ -157,7 +281,169 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
     </MapContainer>
   )
 }
+ 
 
+  /* ── Shared address suggestion dropdown ── */
+  function SuggestionDropdown({
+    type,
+    items,
+    show,
+    query,
+    onSelectAddress,
+    onUseMyLocation,
+    geoLabel,
+    geoReady,
+  }) {
+    if (!show) return null
+
+    const isPickup = type === 'pickup'
+
+    return (
+      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <button
+          type="button"
+          onClick={() => onUseMyLocation(type)}
+          disabled={!geoReady}
+          className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left hover:bg-indigo-50 disabled:opacity-40"
+        >
+          <Navigation className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+          <span className="truncate text-sm font-medium text-indigo-600">{geoLabel}</span>
+        </button>
+
+        {items.length === 0 ? (
+          <p className="px-4 py-3 text-sm text-slate-400">No results</p>
+        ) : (
+          items.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => onSelectAddress(type, item)}
+              className={[
+                'flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50',
+                query === item.label ? 'bg-slate-50 font-semibold text-brand' : '',
+              ].join(' ')}
+            >
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-300" />
+              {item.label}
+            </button>
+          ))
+        )}
+      </div>
+    )
+  }
+
+  /* ── Address input field ── */
+  function AddressField({
+    type,
+    query,
+    setQuery,
+    showDrop,
+    setShowDrop,
+    suggestions,
+    geoLabel,
+    geoReady,
+    onUseMyLocation,
+    onSelectAddress,
+  }) {
+    const inputRef = useRef(null)
+    const [focused, setFocused] = useState(false)
+
+    const isPickup = type === 'pickup'
+    const label = isPickup ? 'Pickup' : 'Dropoff'
+    const hint = isPickup ? 'Where should we collect the package?' : 'Where is it going?'
+    const pinColor = isPickup ? 'text-indigo-500' : 'text-green-600'
+    const dotColor = isPickup ? 'bg-indigo-100 ring-indigo-300' : 'bg-green-100 ring-green-300'
+    const dotInner = isPickup ? 'bg-indigo-500' : 'bg-green-600'
+
+    const handleFocus = () => {
+      setFocused(true)
+      setShowDrop(true)
+    }
+
+    const handleBlur = () => {
+      setFocused(false)
+      window.setTimeout(() => setShowDrop(false), 150)
+    }
+
+    return (
+      <div className="relative">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-black-400">{label}</p>
+              <p className="mt-0.5 text-xs text-slate-400">{hint}</p>
+            </div>
+            <span className={`flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-opacity-30 ${dotColor}`}>
+              <span className={`h-2.5 w-2.5 rounded-full ${dotInner}`} />
+            </span>
+          </div>
+
+          <div
+            onMouseDown={() => {
+              setFocused(true)
+              setShowDrop(true)
+              requestAnimationFrame(() => inputRef.current?.focus())
+            }}
+            onClick={() => {
+              setFocused(true)
+              setShowDrop(true)
+              inputRef.current?.focus()
+            }}
+            className={[
+              'flex min-w-0 cursor-text items-center gap-2 rounded-2xl border bg-slate-50 px-3 py-2 transition-all duration-150',
+              focused ? 'border-indigo-400 shadow-[0_0_0_3px_rgba(99,102,241,0.10)]' : 'border-slate-200',
+            ].join(' ')}
+          >
+            <MapPin className={`h-4 w-4 shrink-0 ${pinColor}`} />
+            <input
+              ref={inputRef}
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setShowDrop(true)
+              }}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              placeholder={`Enter ${label.toLowerCase()} address`}
+              autoCapitalize="words"
+              autoCorrect="off"
+              className="min-w-0 w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
+            />
+            {query ? (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setQuery('')
+                  setShowDrop(true)
+                  inputRef.current?.focus()
+                }}
+                className="shrink-0 rounded-full p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-300" />
+            )}
+          </div>
+        </div>
+
+        <SuggestionDropdown
+          type={type}
+          items={suggestions}
+          show={showDrop}
+          query={query}
+          onSelectAddress={onSelectAddress}
+          onUseMyLocation={onUseMyLocation}
+          geoLabel={geoLabel}
+          geoReady={geoReady}
+        />
+      </div>
+    )
+  }
 /* ─── Main page ──────────────────────────────────────────────────────── */
 export default function Book() {
   const user = useRequireAuth('customer')
@@ -165,8 +451,8 @@ export default function Book() {
 
   /* form state */
   const [step, setStep]               = useState(0)
-  const [pickupQuery, setPickupQuery] = useState('Lekki Phase 1')
-  const [dropoffQuery, setDropoffQuery] = useState('Victoria Island')
+  const [pickupQuery, setPickupQuery] = useState('')
+  const [dropoffQuery, setDropoffQuery] = useState('')
   const [pickupCoords, setPickupCoords] = useState({ lat: 6.4328, lng: 3.4382 })
   const [dropoffCoords, setDropoffCoords] = useState({ lat: 6.4270, lng: 3.4300 })
   const [confirmedPickup, setConfirmedPickup]   = useState('Lekki Phase 1')
@@ -187,10 +473,6 @@ export default function Book() {
   const [geoCoords, setGeoCoords]   = useState(null)
   const [geoLabel, setGeoLabel]     = useState('Detecting location…')
   const [geoReady, setGeoReady]     = useState(false)
-
-  /* refs for click-outside */
-  const pickupBoxRef  = useRef(null)
-  const dropoffBoxRef = useRef(null)
 
   /* ── Geolocation on mount ── */
   useEffect(() => {
@@ -231,18 +513,6 @@ export default function Book() {
       clearTimeout(timer)
     }
   }, [dropoffQuery])
-
-  /* ── Click outside to close dropdowns ── */
-  useEffect(() => {
-    function onDown(e) {
-      if (pickupBoxRef.current && !pickupBoxRef.current.contains(e.target))
-        setShowPickupDrop(false)
-      if (dropoffBoxRef.current && !dropoffBoxRef.current.contains(e.target))
-        setShowDropoffDrop(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [])
 
   /* ── Scroll top on step change ── */
   useEffect(() => {
@@ -398,247 +668,8 @@ export default function Book() {
     )
   }
 
-  /* ── Shared address suggestion dropdown ── */
-  function SuggestionDropdown({ type, items, show }) {
-    if (!show) return null
-    const isPickup = type === 'pickup'
-    return (
-      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-        {/* Current location row */}
-        
-        <button
-          type="button"
-          onClick={() => useMyLocation(type)}
-          disabled={!geoReady}
-          className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left hover:bg-indigo-50 disabled:opacity-40"
-        >
-          <Navigation className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
-          <span className="text-sm font-medium text-indigo-600 truncate">{geoLabel}</span>
-        </button>
-        {/* Address list */}
-        {items.length === 0 ? (
-          <p className="px-4 py-3 text-sm text-slate-400">No results</p>
-        ) : (
-          items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => selectAddress(type, item)}
-              className={[
-                'flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50',
-                (isPickup ? pickupQuery : dropoffQuery) === item.label
-                  ? 'bg-slate-50 font-semibold text-brand'
-                  : '',
-              ].join(' ')}
-            >
-              <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-300" />
-              {item.label}
-            </button>
-          ))
-        )}
-      </div>
-    )
-  }
-
-  /* ── Address input field ── */
-function AddressField({ type }) {
-    const isPickup = type === 'pickup'
-    const query    = isPickup ? pickupQuery    : dropoffQuery
-    const setQuery = isPickup ? setPickupQuery : setDropoffQuery
-    const showDrop = isPickup ? showPickupDrop : showDropoffDrop
-    const setShow  = isPickup ? setShowPickupDrop : setShowDropoffDrop
-    const items    = isPickup ? pickupSuggestions : dropoffSuggestions
-    const pinColor = isPickup ? 'text-indigo-500' : 'text-green-600'
-    const dotColor = isPickup ? 'bg-indigo-100 ring-indigo-300' : 'bg-green-100 ring-green-300'
-    const dotInner = isPickup ? 'bg-indigo-500' : 'bg-green-600'
-    const label    = isPickup ? 'Pickup' : 'Dropoff'
-    const hint     = isPickup ? 'Where should we collect the package?' : 'Where is it going?'
-    const ref      = isPickup ? pickupBoxRef : dropoffBoxRef
-
-    const [focused, setFocused] = useState(false)
-    const inputRef = useRef(null)
-
-    return (
-      <div ref={ref} className="relative">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-black-400">{label}</p>
-              <p className="mt-0.5 text-xs text-slate-400">{hint}</p>
-            </div>
-            <span className={`flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-opacity-30 ${dotColor}`}>
-              <span className={`h-2.5 w-2.5 rounded-full ${dotInner}`} />
-            </span>
-          </div>
-
-          {/* Active border is on this inner row only */}
-          <div
-            onMouseDown={() => {
-              setFocused(true)
-              setShow(true)
-              requestAnimationFrame(() => inputRef.current?.focus())
-            }}
-            onClick={() => {
-              setFocused(true)
-              setShow(true)
-              inputRef.current?.focus()
-            }}
-            className={[
-              'flex min-w-0 cursor-text items-center gap-2 rounded-2xl border bg-slate-50 px-3 py-2 transition-all duration-150',
-              focused
-                ? 'border-indigo-400 shadow-[0_0_0_3px_rgba(99,102,241,0.10)]'
-                : 'border-slate-200',
-            ].join(' ')}
-          >
-            <MapPin className={`h-4 w-4 shrink-0 ${pinColor}`} />
-            <input
-              ref={inputRef}
-              type="text"
-              autoComplete="off"
-              spellCheck={false}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-                setShow(true)
-              }}
-              onFocus={() => {
-                setFocused(true)
-                setShow(true)
-              }}
-              onBlur={() => {
-                setFocused(false)
-                /* delay so suggestion clicks register before dropdown closes */
-                setTimeout(() => setShow(false), 150)
-              }}
-              placeholder={`Enter ${label.toLowerCase()} address`}
-              autoCapitalize="words"
-              autoCorrect="off"
-              className="min-w-0 w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
-            />
-            {query ? (
-              <button
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  setQuery('')
-                  setShow(true)
-                  inputRef.current?.focus()
-                }}
-                className="shrink-0 rounded-full p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-300" />
-            )}
-          </div>
-        </div>
-
-        <SuggestionDropdown type={type} items={items} show={showDrop} />
-      </div>
-    )
-  } 
 
   /* ── Weight slider with colour track ── */
-  function WeightSlider() {
-    const pct = Math.round(((weight - 1) / 49) * 100)
-    const thresholdPct = Math.round(((20 - 1) / 49) * 100)
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        {/* header */}
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold text-slate-800">Package weight</p>
-          <span
-            className="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
-            style={{ background: wMeta.bg, borderColor: wMeta.border, color: wMeta.text }}
-          >
-            {wMeta.label}
-          </span>
-        </div>
-
-        {/* slider track wrapper */}
-        <div className="relative mb-1 h-5 flex items-center">
-          {/* custom track */}
-          <div className="absolute inset-x-0 h-2 rounded-full bg-slate-200 overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-150"
-              style={{ width: `${pct}%`, background: wMeta.color }}
-            />
-          </div>
-          {/* threshold tick */}
-          <div
-            className="absolute top-0 bottom-0 flex items-center pointer-events-none"
-            style={{ left: `${thresholdPct}%` }}
-          >
-            <div className="h-4 w-px bg-slate-400 opacity-60" />
-          </div>
-          {/* native range — transparent over the custom track */}
-          <input
-            type="range"
-            min={1}
-            max={50}
-            step={1}
-            value={weight}
-            onChange={(e) => setWeight(Number(e.target.value))}
-            className="absolute inset-x-0 h-full w-full cursor-pointer opacity-0"
-            style={{ zIndex: 2 }}
-          />
-          {/* thumb visual */}
-          <div
-            className="pointer-events-none absolute top-1/2 -translate-y-1/2 h-5 w-5 rounded-full border-2 border-white shadow-md transition-all duration-150"
-            style={{
-              left: `calc(${pct}% - 10px)`,
-              background: wMeta.color,
-              zIndex: 1,
-            }}
-          />
-        </div>
-
-        {/* range labels */}
-        <div className="flex justify-between text-[10px] text-slate-400 mb-4">
-          <span>1 kg</span>
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-px bg-slate-400" />
-            20 kg limit
-          </span>
-          <span>50 kg</span>
-        </div>
-
-        {/* numeric input + fee status */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2">
-            <input
-              type="number"
-              min={1}
-              max={50}
-              value={weight}
-              onChange={(e) =>
-                setWeight(Math.min(50, Math.max(1, Number(e.target.value))))
-              }
-              className="w-14 bg-transparent text-sm font-bold text-slate-800 outline-none"
-            />
-            <span className="text-xs text-slate-400">kg</span>
-          </div>
-          <div
-            className="flex flex-1 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium"
-            style={{ background: wMeta.bg, borderColor: wMeta.border, color: wMeta.text }}
-          >
-            {weight > 20 ? (
-              <>
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                Extra charge: ₦{weightSurcharge}
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                No surcharge
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   /* ── Desktop aside map panel ── */
   function DesktopMap() {
@@ -858,6 +889,13 @@ function AddressField({ type }) {
   /* ══════════════════════════════════════════════
      RENDER
   ══════════════════════════════════════════════ */
+   const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/customer')
+    }
+  }
   return (
     <AppShell>
       {/* Fullscreen map overlay (desktop) */}
@@ -865,24 +903,22 @@ function AddressField({ type }) {
 
       <main className="min-h-screen px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-8">
         <div className="mx-auto max-w-6xl">
-
           {/* Back button */}
           <button
-            onClick={() => navigate('/customer')}
-            className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-800"
+            type="button"
+            onClick={handleBack}
+            aria-label="Go back"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to dashboard
           </button>
 
           {/* Page grid */}
           <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-
             {/* ── Left: form column ── */}
             <div className="min-w-0 space-y-4">
-
               {/* Header card */}
-              <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-7">
+              <div className="rounded-2xl border mt-5 border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-7">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
@@ -906,11 +942,21 @@ function AddressField({ type }) {
                 <StepBar />
 
                 <form onSubmit={handleSubmit}>
-
                   {/* ─── STEP 0: Route ─── */}
                   {step === 0 && (
                     <div className="space-y-3">
-                      <AddressField type="pickup" />
+                      <AddressField
+                        type="pickup"
+                        query={pickupQuery}
+                        setQuery={setPickupQuery}
+                        showDrop={showPickupDrop}
+                        setShowDrop={setShowPickupDrop}
+                        suggestions={pickupSuggestions}
+                        geoLabel={geoLabel}
+                        geoReady={geoReady}
+                        onUseMyLocation={useMyLocation}
+                        onSelectAddress={selectAddress}
+                      />
 
                       {/* swap */}
                       <div className="flex justify-center">
@@ -923,16 +969,29 @@ function AddressField({ type }) {
                         </button>
                       </div>
 
-                      <AddressField type="dropoff" />
+                      <AddressField
+                        type="dropoff"
+                        query={dropoffQuery}
+                        setQuery={setDropoffQuery}
+                        showDrop={showDropoffDrop}
+                        setShowDrop={setShowDropoffDrop}
+                        suggestions={dropoffSuggestions}
+                        geoLabel={geoLabel}
+                        geoReady={geoReady}
+                        onUseMyLocation={useMyLocation}
+                        onSelectAddress={selectAddress}
+                      />
 
                       {/* Route summary mini-card */}
                       <div className="mt-2 grid grid-cols-2 gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                         {[
-                          { label: 'Distance', val: `${km} km`   },
-                          { label: 'ETA',      val: `${eta} min` },
+                          { label: "Distance", val: `${km} km` },
+                          { label: "ETA", val: `${eta} min` },
                         ].map(({ label, val }) => (
                           <div key={label} className="rounded-xl bg-white px-4 py-3 shadow-sm">
-                            <p className="text-[10px] uppercase tracking-widest text-slate-400">{label}</p>
+                            <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                              {label}
+                            </p>
                             <p className="mt-1 text-base font-bold text-slate-800">{val}</p>
                           </div>
                         ))}
@@ -945,21 +1004,23 @@ function AddressField({ type }) {
                     <div className="space-y-5">
                       {/* Package type picker */}
                       <div>
-                        <p className="mb-3 text-sm font-semibold text-slate-700">Choose a service</p>
+                        <p className="mb-3 text-sm font-semibold text-slate-700">
+                          Choose a service
+                        </p>
                         <div className="grid gap-3 sm:grid-cols-3">
                           {PACKAGE_TYPES.map(({ id, label, desc, Icon, surcharge, accent }) => {
-                            const active = pkg === id
+                            const active = pkg === id;
                             return (
                               <button
                                 key={id}
                                 type="button"
                                 onClick={() => setPkg(id)}
                                 className={[
-                                  'group relative rounded-2xl border p-4 text-left transition-all duration-200',
+                                  "group relative rounded-2xl border p-4 text-left transition-all duration-200",
                                   active
-                                    ? 'border-brand bg-brand/5 shadow-md ring-2 ring-brand/10'
-                                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white',
-                                ].join(' ')}
+                                    ? "border-brand bg-brand/5 shadow-md ring-2 ring-brand/10"
+                                    : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white",
+                                ].join(" ")}
                               >
                                 {active && (
                                   <span className="absolute right-3 top-3 flex h-4 w-4 items-center justify-center rounded-full bg-brand">
@@ -968,9 +1029,11 @@ function AddressField({ type }) {
                                 )}
                                 <Icon
                                   className="mb-2.5 h-5 w-5 transition-colors"
-                                  style={{ color: active ? accent : '#94a3b8' }}
+                                  style={{ color: active ? accent : "#94a3b8" }}
                                 />
-                                <p className={`text-sm font-semibold ${active ? 'text-slate-900' : 'text-slate-600'}`}>
+                                <p
+                                  className={`text-sm font-semibold ${active ? "text-slate-900" : "text-slate-600"}`}
+                                >
                                   {label}
                                 </p>
                                 <p className="mt-0.5 text-xs text-slate-400">{desc}</p>
@@ -978,17 +1041,24 @@ function AddressField({ type }) {
                                   ≈ ₦{Math.round(km * 3 + surcharge)}
                                 </p>
                               </button>
-                            )
+                            );
                           })}
                         </div>
                       </div>
 
                       {/* Weight */}
-                      <WeightSlider />
+                      <WeightSlider
+                        weight={weight}
+                        setWeight={setWeight}
+                        wMeta={wMeta}
+                        weightSurcharge={weightSurcharge}
+                      />
 
                       {/* Special instructions */}
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <p className="mb-2 text-sm font-semibold text-slate-700">Special instructions</p>
+                        <p className="mb-2 text-sm font-semibold text-slate-700">
+                          Special instructions
+                        </p>
                         <textarea
                           value={note}
                           onChange={(e) => setNote(e.target.value)}
@@ -1005,15 +1075,21 @@ function AddressField({ type }) {
                     <div className="space-y-4">
                       {/* Route summary */}
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Route</p>
+                        <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                          Route
+                        </p>
                         <div className="space-y-3">
                           <div className="flex items-start gap-3">
                             <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100">
                               <div className="h-2 w-2 rounded-full bg-indigo-500" />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-widest text-slate-400">Pickup</p>
-                              <p className="mt-0.5 text-sm font-semibold text-slate-800">{confirmedPickup}</p>
+                              <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                                Pickup
+                              </p>
+                              <p className="mt-0.5 text-sm font-semibold text-slate-800">
+                                {confirmedPickup}
+                              </p>
                             </div>
                           </div>
                           <div className="ml-3 h-5 w-px bg-slate-200" />
@@ -1022,18 +1098,24 @@ function AddressField({ type }) {
                               <div className="h-2 w-2 rounded-full bg-green-600" />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-widest text-slate-400">Dropoff</p>
-                              <p className="mt-0.5 text-sm font-semibold text-slate-800">{confirmedDropoff}</p>
+                              <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                                Dropoff
+                              </p>
+                              <p className="mt-0.5 text-sm font-semibold text-slate-800">
+                                {confirmedDropoff}
+                              </p>
                             </div>
                           </div>
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-3">
                           {[
-                            { label: 'Distance', val: `${km} km`   },
-                            { label: 'ETA',      val: `${eta} min` },
+                            { label: "Distance", val: `${km} km` },
+                            { label: "ETA", val: `${eta} min` },
                           ].map(({ label, val }) => (
                             <div key={label} className="rounded-xl bg-white px-4 py-3 shadow-sm">
-                              <p className="text-[10px] uppercase tracking-widest text-slate-400">{label}</p>
+                              <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                                {label}
+                              </p>
                               <p className="mt-1 text-base font-bold text-slate-800">{val}</p>
                             </div>
                           ))}
@@ -1042,16 +1124,22 @@ function AddressField({ type }) {
 
                       {/* Package summary */}
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Package</p>
+                        <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                          Package
+                        </p>
                         <div className="grid grid-cols-3 gap-3">
                           {[
-                            { label: 'Type',   val: pkg },
-                            { label: 'Weight', val: `${weight} kg` },
-                            { label: 'Notes',  val: note || 'None', small: true },
+                            { label: "Type", val: pkg },
+                            { label: "Weight", val: `${weight} kg` },
+                            { label: "Notes", val: note || "None", small: true },
                           ].map(({ label, val, small }) => (
                             <div key={label} className="rounded-xl bg-white px-3 py-3 shadow-sm">
-                              <p className="text-[10px] uppercase tracking-widest text-slate-400">{label}</p>
-                              <p className={`mt-1 font-semibold text-slate-800 leading-snug ${small ? 'text-xs line-clamp-2' : 'text-sm'}`}>
+                              <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                                {label}
+                              </p>
+                              <p
+                                className={`mt-1 font-semibold text-slate-800 leading-snug ${small ? "text-xs line-clamp-2" : "text-sm"}`}
+                              >
                                 {val}
                               </p>
                             </div>
@@ -1062,8 +1150,12 @@ function AddressField({ type }) {
                       {/* Price */}
                       <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
                         <div>
-                          <p className="text-[10px] uppercase tracking-widest text-slate-400">Total estimate</p>
-                          <p className="mt-1 text-3xl font-bold tracking-tight text-slate-900">₦{price.toLocaleString()}</p>
+                          <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                            Total estimate
+                          </p>
+                          <p className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
+                            ₦{price.toLocaleString()}
+                          </p>
                         </div>
                         <div className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-500">
                           Ready to confirm
@@ -1090,11 +1182,11 @@ function AddressField({ type }) {
                         onClick={handleAdvance}
                         disabled={advanceBlocked}
                         className={[
-                          'flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold shadow-sm transition-all active:scale-95',
+                          "flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold shadow-sm transition-all active:scale-95",
                           advanceBlocked
-                            ? 'cursor-not-allowed bg-slate-100 text-slate-400 shadow-none'
-                            : 'bg-brand text-white hover:bg-brand-hover',
-                        ].join(' ')}
+                            ? "cursor-not-allowed bg-slate-100 text-slate-400 shadow-none"
+                            : "bg-brand text-white hover:bg-brand-hover",
+                        ].join(" ")}
                       >
                         Continue
                         <ArrowRight className="h-4 w-4" />
@@ -1138,5 +1230,5 @@ function AddressField({ type }) {
       {/* Mobile floating map (lg hidden handled inside component) */}
       <MobileFloatingMap />
     </AppShell>
-  )
+  );
 }

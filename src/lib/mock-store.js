@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 const STORAGE_KEY = 'dashpoint-store-v1'
 const SESSION_KEY = 'dashpoint-session'
@@ -133,12 +133,22 @@ export function getStore() {
 
 export function useStore(selector) {
   hydrate()
+  const selectorRef = useRef(selector)
   const [value, setValue] = useState(() => selector(store))
+
   useEffect(() => {
-    const update = () => setValue(selector(store))
+    selectorRef.current = selector
+  }, [selector])
+
+  useEffect(() => {
+    const update = () => {
+      const nextValue = selectorRef.current(store)
+      setValue((prevValue) => (Object.is(prevValue, nextValue) ? prevValue : nextValue))
+    }
     update()
     return subscribe(update)
-  }, [selector])
+  }, [])
+
   return value
 }
 
