@@ -299,7 +299,11 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
     const isPickup = type === 'pickup'
 
     return (
-      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+      <div
+        className="absolute left-0 right-0 top-[calc(100%+6px)] z-[999] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        style={{ minWidth: 0 }}
+        onMouseDown={(e) => e.preventDefault()}
+      >
         <button
           type="button"
           onClick={() => onUseMyLocation(type)}
@@ -324,7 +328,7 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
               ].join(' ')}
             >
               <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-300" />
-              {item.label}
+              <span className="truncate">{item.label}</span>
             </button>
           ))
         )}
@@ -366,7 +370,7 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
     }
 
     return (
-      <div className="relative">
+      <div className="relative" style={{ overflow: 'visible', isolation: 'isolate' }}>
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div>

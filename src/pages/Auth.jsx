@@ -54,11 +54,17 @@ export default function Auth() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 py-12 w-full">
       <Link to="/" className="self-start mb-2 flex items-center gap-1 text-sm text-slate-400 hover:text-navy transition-colors">
-        <ChevronLeft className="h-4 w-4" /> Home
+        <ChevronLeft className="h-4 w-4" /> Back
       </Link>
 
-      <div className="mb-5 h-20 w-20 rounded-2xl bg-surface-200" />
-      <h1 className="font-display text-xl sm:text-2xl font-bold text-navy">Welcome to DASHPOINT</h1>
+      <div className="mb-5 flex items-center justify-center">
+        <img
+          src="/logo.png"
+          alt="LogiFlow Logo"
+          className="h-20 w-auto object-contain"
+        />
+      </div>
+      <h1 className="font-display text-xl sm:text-2xl font-bold text-navy">Welcome to Workspace Logistics</h1>
       <p className="mt-1 text-sm text-slate-500">Sign in or create an account to continue</p>
 
       <div className="mt-8 w-full max-w-sm rounded-2xl border border-surface-200 bg-white p-6 shadow-md">

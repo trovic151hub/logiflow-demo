@@ -89,7 +89,9 @@ export default function CustomerDashboard() {
   const [noticeOpen, setNoticeOpen] = useState(false)
   const [trackedDelivery, setTrackedDelivery] = useState(null)
 
-  const active  = deliveries.filter((d) => d.status !== 'delivered' && d.status !== 'cancelled')
+  const active  = [...deliveries]
+    .filter((d) => d.status !== 'delivered' && d.status !== 'cancelled')
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
   const pending = deliveries.filter((d) => d.status === 'pending')
 
   if (!user) return null
@@ -119,50 +121,25 @@ export default function CustomerDashboard() {
         max-w-7xl on xl for proper large-screen margins.
       ─────────────────────────────────────────────────────────────── */}
       <main
-        className="w-full mx-auto flex flex-col items-center px-4 sm:px-6 lg:px-8"
-         style={{ marginTop: '-2.5rem' , maxWidth: '80em' }}
+        className="w-full mx-auto flex flex-col items-center px-4 sm:px-6 lg:px-8 pb-10"
+        style={{ maxWidth: '80em', marginTop: '-2.5rem' }}
       >
-        <div className="mb-4 w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <button onClick={() => setNoticeOpen((value) => !value)} className="flex w-full items-start justify-between gap-3 text-left">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
-                <BellRing className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-800">Live updates are active</p>
-                <p className="text-sm text-slate-500">Your current bookings and delivery progress will appear here as events happen.</p>
-              </div>
-            </div>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">{noticeOpen ? 'Hide' : 'Show'}</span>
-          </button>
-          {noticeOpen && (
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-              We will surface pickup, in-transit, and delivery notifications for your active shipments in real time.
-            </div>
-          )}
-        </div>
-
-        {/* ── Step 1: Overlapping stats + tracking card ──────────── */}
+        
+        {/* ── Step 1: Stats + tracking card ──────────── */}
 <div
   className="
-    absolute
-    left-1/2
-    -translate-x-1/2
-    w-[92%]
-    sm:w-[88%]
-    md:w-[80%]
-    lg:w-[70%]
+    w-full
     max-w-xl
     rounded-2xl
-
     bg-white
     shadow-xl
     overflow-hidden
+    mb-6
+
   "
   style={{
     border: '1px solid #f0e2e3',
-    zIndex: 999,
-  
+    zIndex:999
   }}
 >
   {/* Tracking input row */}
@@ -322,7 +299,7 @@ export default function CustomerDashboard() {
 </div>
 
         {/* ── Step 2: Quick actions ────────────────────────────────── */}
-        <section className="mb-6 mt-40 w-full">
+        <section className="mb-6 w-full">
           <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-3 px-1">
             Quick actions
           </p>

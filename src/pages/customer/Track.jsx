@@ -25,7 +25,7 @@ export default function Track() {
     if (!delivery) return
     if (delivery.status === 'cancelled') return
     if (delivery.status === 'pending') {
-      const t = setTimeout(() => updateDeliveryStatus(id, 'accepted', 'u-rider-1', 'Marcus Chen'), 2500)
+      const t = setTimeout(() => updateDeliveryStatus(id, 'accepted', 'u-rider-1', 'Marcus Chen'), 800)
       return () => clearTimeout(t)
     }
     if (delivery.status === 'accepted') {
@@ -46,7 +46,7 @@ export default function Track() {
         } else {
           advanceCourier(id, frac)
         }
-      }, 1500)
+      }, 600)
       return () => clearInterval(iv)
     }
   }, [delivery?.status, id])

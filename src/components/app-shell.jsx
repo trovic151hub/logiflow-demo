@@ -109,14 +109,11 @@ export function AppShell({ children }) {
     ${
       isDashboard
         ? 'min-h-[230px] sm:min-h-[230px] lg:min-h-[200px]'
-        : ''
-
-    }
-    ${
-      !isDashboard ? 'hidden md:flex' : 'flex'
+        : 'hidden md:flex h-16'
     }
   `}
   style={{
+  
     background: 'linear-gradient(180deg, #305CDE 100%, #1E3A8A 0%)',
   }}
 >
@@ -126,10 +123,16 @@ export function AppShell({ children }) {
     {/* Logo */}
     <Link
       to="/"
-      className="font-display text-xl sm:text-2xl font-extrabold tracking-tight"
+      className="flex items-center gap-2 shrink-0"
       style={{ color: '#ffffff' }}
     >
-      WORKPLACE
+      <img
+        src="/logo.png"
+        alt="LogiFlow Logo"
+        className="h-9 w-auto object-contain brightness-0 invert"
+        onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'block'; }}
+      />
+      <span className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-white" style={{ display: 'none' }}>LogiFlow</span>
     </Link>
 
     {/* Right controls */}
@@ -326,7 +329,7 @@ export function AppShell({ children }) {
       {session && <MobileNav pathname={pathname} />}
 
       <footer className="hidden md:flex border-t border-surface-200 bg-white px-4 sm:px-6 lg:px-8 py-4 text-xs text-slate-400 items-center justify-between max-w-7xl mx-auto w-full">
-        <span>DashPoint demo · frontend-only mock data</span>
+        <span>LogiFlow demo · frontend-only mock data</span>
         <button
           onClick={() => { resetDemo(); navigate('/') }}
           className="text-slate-500 hover:text-brand font-semibold"

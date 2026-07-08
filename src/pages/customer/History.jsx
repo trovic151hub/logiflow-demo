@@ -48,8 +48,11 @@ export default function History() {
   }
 
   const pending = deliveries.filter((d) => d.status === 'pending')
-  const active = deliveries.filter((d) => d.status !== 'delivered')
+  const active = deliveries.filter((d) => d.status !== 'delivered' && d.status !== 'cancelled')
   const completed = deliveries.filter((d) => d.status === 'delivered')
+
+  // Sort all deliveries newest first so freshly placed orders always appear at top
+  const sortedDeliveries = [...deliveries].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
 
   function openInvoice(delivery) {
     setActiveDelivery(delivery)
@@ -130,7 +133,7 @@ export default function History() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
-                      {deliveries.map((d) => {
+                      {sortedDeliveries.map((d) => {
                         const style = statusStyle(d.status)
                         const booked = formatDateTime(d.createdAt)
                         return (

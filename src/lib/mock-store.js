@@ -119,6 +119,11 @@ function emit() {
   listeners.forEach((l) => l())
 }
 
+// Lightweight emit that skips localStorage — used for rapid courier position updates
+function emitSilent() {
+  listeners.forEach((l) => l())
+}
+
 export function subscribe(fn) {
   listeners.add(fn)
   return () => {
@@ -241,7 +246,7 @@ export function advanceCourier(id, fraction) {
       },
     }
   })
-  emit()
+  emitSilent() // skip localStorage write for smooth courier movement
 }
 
 export function resetDemo() {
