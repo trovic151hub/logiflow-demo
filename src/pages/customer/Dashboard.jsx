@@ -89,10 +89,18 @@ export default function CustomerDashboard() {
   const [noticeOpen, setNoticeOpen] = useState(false)
   const [trackedDelivery, setTrackedDelivery] = useState(null)
 
+  const inTransit = deliveries.filter((d) => d.status === 'in_transit')
   const active  = [...deliveries]
-    .filter((d) => d.status !== 'delivered' && d.status !== 'cancelled')
+    .filter((d) => ['pending', 'accepted', 'picked_up'].includes(d.status))
     .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
-  const pending = deliveries.filter((d) => d.status === 'pending')
+  const completed = deliveries.filter((d) => d.status === 'delivered')
+  const recentUpdates = [...deliveries]
+    .sort((a, b) => {
+      const aTime = Math.max(a.createdAt ?? 0, ...Object.values(a.statusTimestamps ?? {}).map((time) => Number(time) || 0))
+      const bTime = Math.max(b.createdAt ?? 0, ...Object.values(b.statusTimestamps ?? {}).map((time) => Number(time) || 0))
+      return bTime - aTime
+    })
+    .slice(0, 3)
 
   if (!user) return null
 
@@ -134,12 +142,14 @@ export default function CustomerDashboard() {
     bg-white
     shadow-xl
     overflow-hidden
+   
     mb-6
 
   "
   style={{
     border: '1px solid #f0e2e3',
-    zIndex:999
+    zIndex:1300,
+   
   }}
 >
   {/* Tracking input row */}
@@ -206,95 +216,59 @@ export default function CustomerDashboard() {
   </div>
 
   {/* Stats Row */}
-  <div className="grid grid-cols-2">
-    {/* Active Transit */}
-    <div className="flex flex-col items-center justify-center gap-2 px-4 sm:px-6 py-4 sm:py-5">
-      <div
-        className="
-          flex
-          items-center
-          gap-1.5
-          rounded-full
-          px-3
-          py-1
-          text-[11px]
-          sm:text-xs
-          font-bold
-        "
-        style={{
-          background: '#DCFCE7',
-          color: '#15803D',
-        }}
+  <div className="grid grid-cols-3">
+    {[
+      {
+        label: 'In transit',
+        value: inTransit.length,
+        caption: 'Moving shipments',
+        to: '/customer/track?tab=in_transit',
+        bg: '#f4c3bb',
+        color: '#b21105',
+        dot: '#cf0606',
+      },
+      {
+        label: 'Active',
+        value: active.length,
+        caption: 'Open orders',
+        to: '/customer/track?tab=active',
+        bg: '#FEF3C7',
+        color: '#B45309',
+        dot: '#D97706',
+      },
+      {
+        label: 'Completed',
+        value: completed.length,
+        caption: 'Finished orders',
+        to: '/customer/track?tab=delivered',
+        bg: '#DCFCE7',
+        color: '#047857',
+        dot: '#10B981',
+      },
+    ].map((stat, index) => (
+      <Link
+        key={stat.label}
+        to={stat.to}
+        className="flex min-w-0 flex-col items-center justify-center gap-1.5 px-1.5 py-4 transition-colors hover:bg-slate-50 sm:gap-2 sm:px-6 sm:py-5"
+        style={index > 0 ? { borderLeft: '1px solid #F1F5F9' } : undefined}
       >
-        <span
-          className="h-1.5 w-1.5 rounded-full"
-          style={{ background: '#16A34A' }}
-        />
-        Active transit
-      </div>
+        <div
+          className="flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold whitespace-nowrap sm:px-3 sm:text-xs"
+          style={{ background: stat.bg, color: stat.color }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: stat.dot }} />
+          {stat.label}
+        </div>
 
-      <p
-        className="
-          font-display
-          text-3xl
-          sm:text-4xl
-          font-extrabold
-        "
-        style={{ color: '#1E293B' }}
-      >
-        {active.length}
-      </p>
+        <p className="font-display text-2xl font-extrabold sm:text-4xl" style={{ color: '#1E293B' }}>
+          {stat.value}
+        </p>
 
-      <p className="text-[11px] sm:text-xs text-slate-400 text-center">
-        Moving shipments
-      </p>
-    </div>
-
-    {/* Awaiting */}
-    <div
-      className="flex flex-col items-center justify-center gap-2 px-4 sm:px-6 py-4 sm:py-5"
-      style={{ borderLeft: '1px solid #F1F5F9' }}
-    >
-      <div
-        className="
-          flex
-          items-center
-          gap-1.5
-          rounded-full
-          px-3
-          py-1
-          text-[11px]
-          sm:text-xs
-          font-bold
-        "
-        style={{
-          background: '#FEF3C7',
-          color: '#B45309',
-        }}
-      >
-        <span
-          className="h-1.5 w-1.5 rounded-full"
-          style={{ background: '#D97706' }}
-        />
-        Awaiting
-      </div>
-
-      <p
-        className="
-          font-display
-          text-3xl
-          sm:text-4xl
-          font-extrabold
-        "
-        style={{ color: '#1E293B' }}
-      >
-        {pending.length}
-      </p>
-
-      <p className="text-[11px] sm:text-xs text-slate-400 text-center">
-        Pending shipments
-      </p>
-    </div>
+        <p className="text-center text-[10px] leading-tight text-slate-400 sm:text-xs">
+          {stat.caption}
+        </p>
+      </Link>
+    ))}
   </div>
 </div>
 
@@ -334,13 +308,13 @@ export default function CustomerDashboard() {
         <section className="mb-8 w-full">
           <div className="flex items-center justify-between mb-3 px-1">
             <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2">
-              Active deliveries
-              {active.length > 0 && (
+              Recent updates
+              {recentUpdates.length > 0 && (
                 <span
                   className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
                   style={{ background: '#305CDE' }}
                 >
-                  {active.length}
+                  {recentUpdates.length}
                 </span>
               )}
             </p>
@@ -353,7 +327,7 @@ export default function CustomerDashboard() {
             className="rounded-2xl  bg-white"
             style={{ border: '1px solid #E2E8F0' }}
           >
-            {active.length === 0 ? (
+            {recentUpdates.length === 0 ? (
               <div className="flex flex-col items-center py-12 gap-3">
                 <div
                   className="flex h-14 w-14 items-center justify-center rounded-2xl"
@@ -361,7 +335,7 @@ export default function CustomerDashboard() {
                 >
                   <Truck className="h-7 w-7 text-slate-300" />
                 </div>
-                <p className="text-sm text-slate-400">No active deliveries right now.</p>
+                <p className="text-sm text-slate-400">No delivery updates yet.</p>
                 <Link
                   to="/customer/book"
                   className="rounded-xl px-4 py-2 text-xs font-bold text-white hover:opacity-90"
@@ -372,7 +346,7 @@ export default function CustomerDashboard() {
               </div>
             ) : (
               <ul className="divide-y divide-slate-50">
-                {active.map((d) => (
+                {recentUpdates.map((d) => (
                   <li key={d.id} className="px-5 py-4 flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -398,9 +372,13 @@ export default function CustomerDashboard() {
                     </div>
                     <Link
                       to={`/customer/track/${d.id}`}
-                      className="shrink-0 rounded-lg border border-slate-200 bg-black text-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                      className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
+                        d.status === 'delivered'
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                          : 'border-slate-200 bg-black text-white hover:bg-slate-800'
+                      }`}
                     >
-                      Track
+                      {d.status === 'delivered' ? 'Completed' : 'Track'}
                     </Link>
                   </li>
                 ))}

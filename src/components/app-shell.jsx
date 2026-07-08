@@ -100,7 +100,7 @@ export function AppShell({ children }) {
   className={`
     relative
     top-0
-    z-50
+    z-[1200]
     flex
     flex-col
     transition-all
@@ -123,7 +123,7 @@ export function AppShell({ children }) {
     {/* Logo */}
     <Link
       to="/"
-      className="flex items-center gap-2 shrink-0"
+      className="flex items-center gap-1 shrink-0"
       style={{ color: '#ffffff' }}
     >
       <img
@@ -132,7 +132,7 @@ export function AppShell({ children }) {
         className="h-9 w-auto object-contain brightness-0 invert"
         onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'block'; }}
       />
-      <span className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-white" style={{ display: 'none' }}>Workspace</span>
+      <span className="font-display text-lg sm:text-xl mt-3 font-extrabold tracking-tight text-white">WORKSPACE</span>
     </Link>
 
     {/* Right controls */}
@@ -202,7 +202,7 @@ export function AppShell({ children }) {
       )}
 
       {/* User avatar + dropdown */}
-      {mounted && user && (
+      {/* {mounted && user && (
         <div className="relative">
           <button
             onClick={() => setProfileOpen(!profileOpen)}
@@ -241,7 +241,7 @@ export function AppShell({ children }) {
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 mt-2 w-48 rounded-xl border border-surface-200 bg-white shadow-lg z-50">
+            <div className="absolute right-0 top-full z-[1400] mt-2 w-48 rounded-xl border border-surface-200 bg-white shadow-lg">
               <div className="px-4 py-3 border-b border-surface-200">
                 <p className="text-sm font-bold text-navy">
                   {user.name}
@@ -274,7 +274,7 @@ export function AppShell({ children }) {
             </div>
           )}
         </div>
-      )}
+      )} */}
     </div>
   </div>
 

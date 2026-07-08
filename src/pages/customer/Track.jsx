@@ -22,6 +22,8 @@ export default function Track() {
   const delivery = useStore((s) => s.deliveries.find((d) => d.id === id || d.trackingId === id))
   const trackingId = location.state?.trackingId ?? delivery?.trackingId ?? id
   const deliveryId = delivery?.id
+  const searchParams = new URLSearchParams(location.search)
+  const requestedTab = searchParams.get('tab')
 
   useEffect(() => {
     if (!delivery) return
@@ -83,6 +85,30 @@ export default function Track() {
 
   if (!id) {
     const orderedDeliveries = [...deliveries].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+    const tabDefinitions = [
+      {
+        key: 'in_transit',
+        label: 'In transit',
+        items: orderedDeliveries.filter((item) => item.status === 'in_transit'),
+      },
+      {
+        key: 'active',
+        label: 'Active',
+        items: orderedDeliveries.filter((item) => item.status !== 'delivered' && item.status !== 'cancelled'),
+      },
+      {
+        key: 'delivered',
+        label: 'Delivered',
+        items: orderedDeliveries.filter((item) => item.status === 'delivered'),
+      },
+    ]
+    const visibleTabs = tabDefinitions.filter((tab) => tab.items.length > 0)
+    const activeTab = visibleTabs.some((tab) => tab.key === requestedTab)
+      ? requestedTab
+      : visibleTabs[0]?.key
+    const displayedDeliveries = activeTab
+      ? visibleTabs.find((tab) => tab.key === activeTab)?.items ?? []
+      : orderedDeliveries
 
     return (
       <AppShell>
@@ -92,6 +118,28 @@ export default function Track() {
             <h1 className="text-2xl text-center font-bold text-slate-900">Your deliveries</h1>
            <p className="text-sm  text-center text-slate-500">Open any order to view its live status and route.</p>
           </div>
+
+          {visibleTabs.length > 0 && (
+            <div className="mb-5 grid grid-cols-3 gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
+              {visibleTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => navigate(`/customer/track?tab=${tab.key}`)}
+                  className={`min-w-0 rounded-xl px-2 py-2.5 text-center text-[11px] font-bold transition-colors sm:text-sm ${
+                    activeTab === tab.key
+                      ? 'bg-black text-white'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <span className="block truncate">{tab.label}</span>
+                  <span className={`mt-0.5 block text-[10px] ${activeTab === tab.key ? 'text-white/70' : 'text-slate-400'}`}>
+                    {tab.items.length}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-3">
             {orderedDeliveries.length === 0 ? (
@@ -106,7 +154,7 @@ export default function Track() {
             ) : (
               
                  
-              orderedDeliveries.map((item) => (
+              displayedDeliveries.map((item) => (
                 <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">

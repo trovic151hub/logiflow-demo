@@ -13,8 +13,15 @@ export default function LogisticsLanding() {
       <nav className="absolute inset-x-0 top-0 z-50 px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 sm:w-9 rounded-lg flex items-center justify-center shrink-0" style={{color:"#ffffff"}}>
-              <img src="logo.png" alt="logo"   className="h-9 w-auto object-contain brightness-0 invert"/>
+            <div
+              className="w-8 sm:w-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ color: "#ffffff" }}
+            >
+              <img
+                src="logo.png"
+                alt="logo"
+                className="h-9 w-auto object-contain brightness-0 invert"
+              />
             </div>
 
             <span className="font-outfit font-bold text-sm sm:text-lg lg:text-xl text-white truncate">
@@ -100,7 +107,6 @@ text-white
 mb-5
 "
             >
-
               Last-mile delivery, <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">
                 on demand.
@@ -111,7 +117,7 @@ mb-5
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-             className="
+              className="
 text-[15px]
 sm:text-base
 md:text-lg
@@ -172,9 +178,11 @@ w-full sm:w-auto"
 
       {/* Stats/Logos Section - Light */}
       <section className="py-12 border-b border-slate-200 bg-white relative z-10">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 flex justify-between
+        <div
+          className="max-w-7xl mx-auto px-6 sm:px-10 flex justify-between
 gap-6
-text-center items-center gap-8 opacity-40 grayscale">
+text-center items-center gap-8 opacity-40 grayscale"
+        >
           <div className="text-base sm:text-xl font-black font-outfit tracking-tighter text-slate-800">
             REAL<span className="font-light">TIME</span>
           </div>
@@ -200,9 +208,11 @@ text-center items-center gap-8 opacity-40 grayscale">
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-3xl
+              <h2
+                className="text-3xl
 sm:text-4xl
-lg:text-5xl font-bold font-outfit mb-6 text-slate-900 leading-tight">
+lg:text-5xl font-bold font-outfit mb-6 text-slate-900 leading-tight"
+              >
                 From warehouse to doorstep, perfectly tracked.
               </h2>
               <p className="text-slate-600 text-2sm md:text-xl mb-8 leading-relaxed">
@@ -327,9 +337,11 @@ lg:text-5xl font-bold font-outfit mb-6 text-slate-900 leading-tight">
               viewport={{ once: true, margin: "-100px" }}
               className="space-y-8"
             >
-              <h2 className="text-3xl
+              <h2
+                className="text-3xl
 sm:text-4xl
-lg:text-5xl font-bold font-outfit leading-tight text-slate-900">
+lg:text-5xl font-bold font-outfit leading-tight text-slate-900"
+              >
                 Command center for your entire operation.
               </h2>
 
