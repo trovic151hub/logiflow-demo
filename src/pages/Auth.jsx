@@ -60,7 +60,7 @@ export default function Auth() {
       <div className="mb-5 flex items-center justify-center">
         <img
           src="/logo.png"
-          alt="LogiFlow Logo"
+          alt="Workspace Logistics & Courier Logo"
           className="h-20 w-auto object-contain"
         />
       </div>

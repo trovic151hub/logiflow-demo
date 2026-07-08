@@ -300,7 +300,7 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
 
     return (
       <div
-        className="absolute left-0 right-0 top-[calc(100%+6px)] z-[999] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        className="absolute left-0 right-0 top-[calc(100%+8px)] z-[1000] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
         style={{ minWidth: 0 }}
         onMouseDown={(e) => e.preventDefault()}
       >
@@ -370,7 +370,7 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
     }
 
     return (
-      <div className="relative" style={{ overflow: 'visible', isolation: 'isolate' }}>
+      <div className={`relative ${showDrop ? 'z-30' : 'z-0'}`} style={{ overflow: 'visible' }}>
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div>
@@ -600,6 +600,8 @@ export default function Book() {
       pickup:  { address: confirmedPickup,  coords: pickupCoords },
       dropoff: { address: confirmedDropoff, coords: dropoffCoords },
       packageType: pkg,
+      weightKg: weight,
+      note: note.trim(),
     })
     navigator.clipboard?.writeText(delivery.trackingId)
     navigate('/customer/track/' + delivery.id)

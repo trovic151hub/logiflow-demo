@@ -344,7 +344,7 @@ export default function CustomerDashboard() {
                 </span>
               )}
             </p>
-            <Link to="/customer/history" className="text-xs font-bold hover:underline" style={{ color: '#305CDE' }}>
+            <Link to="/customer/track" className="text-xs font-bold hover:underline" style={{ color: '#305CDE' }}>
               View all →
             </Link>
           </div>

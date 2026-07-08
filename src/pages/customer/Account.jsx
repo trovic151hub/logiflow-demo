@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { User, LogOut, Settings, Shield, MapPin, Phone, Mail, Calendar, ArrowLeft, BarChart3, Bell, Check, X } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
-import { signOut } from '@/lib/mock-store'
+import { signOut, useStore } from '@/lib/mock-store'
 
 export default function Account() {
   const user = useRequireAuth()
@@ -13,10 +13,18 @@ export default function Account() {
   const [password, setPassword] = useState('')
   const [preferences, setPreferences] = useState({ email: true, sms: true, marketing: false })
   const [savedNotice, setSavedNotice] = useState('')
+  const deliveries = useStore((s) => (user ? s.deliveries.filter((d) => d.customerId === user.id) : []))
 
   const preferencesRef = useMemo(() => ({ current: null }), [])
 
   if (!user) return null
+
+  const totalOrders = deliveries.length
+  const deliveredOrders = deliveries.filter((d) => d.status === 'delivered').length
+  const activeOrders = deliveries.filter((d) => d.status !== 'delivered' && d.status !== 'cancelled').length
+  const totalSpent = deliveries
+    .filter((d) => d.status !== 'cancelled')
+    .reduce((sum, delivery) => sum + (Number(delivery.price) || 0), 0)
 
   const handleLogout = () => {
     signOut()
@@ -116,17 +124,21 @@ export default function Account() {
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-lg bg-surface-100 p-4 text-center">
-                  <p className="text-2xl font-display font-bold text-brand">12</p>
+                  <p className="text-2xl font-display font-bold text-brand">{totalOrders}</p>
                   <p className="text-xs text-slate-500 mt-1">Total Orders</p>
                 </div>
                 <div className="rounded-lg bg-surface-100 p-4 text-center">
-                  <p className="text-2xl font-display font-bold text-success">8</p>
+                  <p className="text-2xl font-display font-bold text-success">{deliveredOrders}</p>
                   <p className="text-xs text-slate-500 mt-1">Delivered</p>
                 </div>
-                {/* <div className="rounded-lg bg-surface-100 p-4 text-center">
-                  <p className="text-2xl font-display font-bold text-orange-500">₦4,850</p>
+                <div className="rounded-lg bg-surface-100 p-4 text-center">
+                  <p className="text-2xl font-display font-bold text-orange-500">{activeOrders}</p>
+                  <p className="text-xs text-slate-500 mt-1">Active</p>
+                </div>
+                <div className="rounded-lg bg-surface-100 p-4 text-center">
+                  <p className="text-2xl font-display font-bold text-slate-900">NGN {totalSpent.toLocaleString()}</p>
                   <p className="text-xs text-slate-500 mt-1">Total Spent</p>
-                </div> */}
+                </div>
               </div>
             </div>
           </div>

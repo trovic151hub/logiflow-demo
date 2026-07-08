@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import {
   LayoutDashboard, PackagePlus, History, Bell, User, LogOut,
-  HelpCircle, ChevronDown,MapIcon
+  HelpCircle, ChevronDown,MapPin
 } from 'lucide-react'
 import { getCurrentUser, signOut, useStore, resetDemo } from '@/lib/mock-store'
 
@@ -24,11 +24,11 @@ export function AppShell({ children }) {
 
   useEffect(() => setMounted(true), [])
 
-  const user     = mounted ? getCurrentUser() : null
+  const user     = getCurrentUser()
   const initials = user
     ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : ''
-  const deliveries = useStore((s) => (user ? s.deliveries.filter((d) => d.customerId === user.id) : []))
+  const deliveries = useStore((s) => (s.session ? s.deliveries.filter((d) => d.customerId === s.session.userId) : []))
   const notifications = useMemo(() => {
     if (!deliveries.length) return []
 
@@ -128,11 +128,11 @@ export function AppShell({ children }) {
     >
       <img
         src="/logo.png"
-        alt="LogiFlow Logo"
+        alt="Workspace Logistics & Courier Logo"
         className="h-9 w-auto object-contain brightness-0 invert"
         onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'block'; }}
       />
-      <span className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-white" style={{ display: 'none' }}>LogiFlow</span>
+      <span className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-white" style={{ display: 'none' }}>Workspace</span>
     </Link>
 
     {/* Right controls */}
@@ -329,7 +329,7 @@ export function AppShell({ children }) {
       {session && <MobileNav pathname={pathname} />}
 
       <footer className="hidden md:flex border-t border-surface-200 bg-white px-4 sm:px-6 lg:px-8 py-4 text-xs text-slate-400 items-center justify-between max-w-7xl mx-auto w-full">
-        <span>LogiFlow demo · frontend-only mock data</span>
+        <span>Workspace demo · frontend-only mock data</span>
         <button
           onClick={() => { resetDemo(); navigate('/') }}
           className="text-slate-500 hover:text-brand font-semibold"
@@ -346,9 +346,9 @@ function MobileNav({ pathname }) {
     
   const NAV_ITEMS = [
     { to: '/customer',         label: 'Dashboard', Icon: LayoutDashboard },
-    { to: '/customer/history', label: 'History',   Icon: History         },
+        { to: '/customer/track',   label:'Track',    Icon: MapPin},
     { to: '/customer/book',    label: 'Book',      Icon: PackagePlus, accent: false, center:true },
-    { to: '/customer/track',   label:'Track',    Icon: MapIcon},
+    { to: '/customer/history', label: 'History',   Icon: History         },
     { to: '/customer/account', label: 'Account',   Icon: User            },
   ]
 

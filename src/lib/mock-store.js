@@ -202,6 +202,8 @@ export function createDelivery(input) {
     pickup: input.pickup,
     dropoff: input.dropoff,
     packageType: input.packageType,
+    weightKg: input.weightKg,
+    note: input.note,
     price: Math.round(km * 3 + (input.packageType === 'Cargo' ? 8 : input.packageType === 'Express' ? 4 : 2)),
     distanceKm: Math.round(km * 10) / 10,
     status: 'pending',

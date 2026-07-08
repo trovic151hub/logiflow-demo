@@ -82,9 +82,9 @@ export default function NotificationsPage() {
     <AppShell>
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Notifications</p>
-            <h1 className="text-2xl font-bold text-slate-900">Recent activity</h1>
+          <div className='w-full'>
+            <p className="text-[10px] font-bold  uppercase text-center tracking-[0.24em] text-slate-400">Notifications</p>
+            <h1 className="text-2xl font-bold  text-center text-slate-900">Recent activity</h1>
           </div>
         </div>
 

@@ -4,7 +4,7 @@ import { getCurrentUser } from './mock-store'
 
 export function useRequireAuth() {
   const navigate = useNavigate()
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => getCurrentUser())
   useEffect(() => {
     const u = getCurrentUser()
     if (!u) {

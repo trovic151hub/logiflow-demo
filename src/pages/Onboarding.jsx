@@ -62,7 +62,7 @@ export default function Onboarding() {
       </div>
 
       <div className="flex flex-col items-center gap-8 text-center">
-        <img src="/logo.png" alt="LogiFlow Logo" className="h-40 w-auto object-contain" />
+        <img src="/logo.png" alt="Workspace Logistics & Courier Logo" className="h-40 w-auto object-contain" />
         <div className="max-w-xs">
           <h2 className="font-display text-xl sm:text-2xl font-bold text-navy">{slide.title}</h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-500">{slide.description}</p>

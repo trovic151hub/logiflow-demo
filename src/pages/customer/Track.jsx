@@ -1,6 +1,6 @@
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { Phone, X, CheckCircle, ArrowLeft, ClipboardList, UserCheck, Package, Truck, Copy, MapPinned } from 'lucide-react'
+import { Phone, X, CheckCircle, ArrowLeft, ClipboardList, UserCheck, Package, Truck, Copy, MapPinned, LoaderCircle, MapMinusIcon, MapPin } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { DeliveryMap } from '@/components/delivery-map'
 import { useRequireAuth } from '@/lib/use-require-auth'
@@ -17,23 +17,26 @@ export default function Track() {
   const navigate = useNavigate()
   const location = useLocation()
   const [copied, setCopied] = useState(false)
+  const [lookupSettled, setLookupSettled] = useState(false)
   const deliveries = useStore((s) => (user ? s.deliveries.filter((d) => d.customerId === user.id) : []))
   const delivery = useStore((s) => s.deliveries.find((d) => d.id === id || d.trackingId === id))
   const trackingId = location.state?.trackingId ?? delivery?.trackingId ?? id
+  const deliveryId = delivery?.id
 
   useEffect(() => {
     if (!delivery) return
+    if (!deliveryId) return
     if (delivery.status === 'cancelled') return
     if (delivery.status === 'pending') {
-      const t = setTimeout(() => updateDeliveryStatus(id, 'accepted', 'u-rider-1', 'Marcus Chen'), 800)
+      const t = setTimeout(() => updateDeliveryStatus(deliveryId, 'accepted', 'u-rider-1', 'Marcus Chen'), 800)
       return () => clearTimeout(t)
     }
     if (delivery.status === 'accepted') {
-      const t = setTimeout(() => updateDeliveryStatus(id, 'picked_up'), 3000)
+      const t = setTimeout(() => updateDeliveryStatus(deliveryId, 'picked_up'), 3000)
       return () => clearTimeout(t)
     }
     if (delivery.status === 'picked_up') {
-      const t = setTimeout(() => updateDeliveryStatus(id, 'in_transit'), 2000)
+      const t = setTimeout(() => updateDeliveryStatus(deliveryId, 'in_transit'), 2000)
       return () => clearTimeout(t)
     }
     if (delivery.status === 'in_transit') {
@@ -42,14 +45,20 @@ export default function Track() {
         frac += 0.05
         if (frac >= 1) {
           clearInterval(iv)
-          updateDeliveryStatus(id, 'delivered')
+          updateDeliveryStatus(deliveryId, 'delivered')
         } else {
-          advanceCourier(id, frac)
+          advanceCourier(deliveryId, frac)
         }
       }, 600)
       return () => clearInterval(iv)
     }
-  }, [delivery?.status, id])
+  }, [delivery?.status, deliveryId])
+
+  useEffect(() => {
+    setLookupSettled(false)
+    const timeout = window.setTimeout(() => setLookupSettled(true), 600)
+    return () => window.clearTimeout(timeout)
+  }, [id])
 
   useEffect(() => {
     if (!copied) return
@@ -81,15 +90,22 @@ export default function Track() {
           <div className="mb-6 flex flex-col gap-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.24em]  text-center text-slate-400">Track hub</p>
             <h1 className="text-2xl text-center font-bold text-slate-900">Your deliveries</h1>
-            <p className="text-sm  text-center text-slate-500">Open any order to view its live status and route.</p>
+           <p className="text-sm  text-center text-slate-500">Open any order to view its live status and route.</p>
           </div>
 
           <div className="space-y-3">
             {orderedDeliveries.length === 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm">
-                No deliveries yet. Book a shipment to start tracking it.
-              </div>
+               <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+              <MapPin className="h-6 w-6" />
+            </div>
+            <h2 className="mt-4 text-lg font-semibold text-slate-900">No activity yet</h2>
+
+            <p className="mt-2 text-sm text-slate-500">Your shipment updates will appear here once a booking is created.</p>
+          </div>
             ) : (
+              
+                 
               orderedDeliveries.map((item) => (
                 <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -105,6 +121,7 @@ export default function Track() {
                     </div>
                     <Link
                       to={`/customer/track/${item.id}`}
+                       reloadDocument
                       className="inline-flex w-fit items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
                       Track
@@ -118,6 +135,16 @@ export default function Track() {
       </AppShell>
     )
   }
+
+  if (!delivery && !lookupSettled)
+    return (
+      <AppShell>
+        <main className="mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center px-6 py-12 text-center">
+          <LoaderCircle className="h-10 w-10 animate-spin text-brand" />
+          <p className="mt-4 text-sm font-semibold text-slate-600">Loading tracking details...</p>
+        </main>
+      </AppShell>
+    )
 
   if (!delivery)
     return (
@@ -151,7 +178,7 @@ export default function Track() {
   const currentIdx = steps.findIndex((s) => s.key === delivery.status)
 
   function handleCancel() {
-    updateDeliveryStatus(id, 'cancelled')
+    updateDeliveryStatus(delivery.id, 'cancelled')
   }
 
   return (
