@@ -11,13 +11,13 @@ const ROLES = [
     iconBg: 'bg-blue-500',
     role: 'customer',
   },
-  {
-    label: 'Seller / Vendor',
-    description: 'Manage orders and sell products',
-    Icon: Store,
-    iconBg: 'bg-purple-500',
-    role: 'customer',
-  },
+  // {
+  //   label: 'Seller / Vendor',
+  //   description: 'Manage orders and sell products',
+  //   Icon: Store,
+  //   iconBg: 'bg-purple-500',
+  //   role: 'customer',
+  // },
   {
     label: 'Courier / Rider',
     description: 'Deliver packages and earn money',

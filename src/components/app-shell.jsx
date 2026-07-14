@@ -13,16 +13,33 @@ const CUSTOMER_LINKS = [
   { to: '/customer/history', label: 'History',   Icon: History         },
 ]
 
+const NOTIFICATION_READ_KEY = 'dashpoint-notifications-read-at'
+
 export function AppShell({ children }) {
   const navigate   = useNavigate()
   const session    = useStore((s) => s.session)
   const [mounted, setMounted]       = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [hasViewedNotifications, setHasViewedNotifications] = useState(false)
+  const [notificationsReadAt, setNotificationsReadAt] = useState(() => {
+    if (typeof window === 'undefined') return 0
+    return Number(window.localStorage.getItem(NOTIFICATION_READ_KEY)) || 0
+  })
   const { pathname } = useLocation()
 
   useEffect(() => setMounted(true), [])
+
+  useEffect(() => {
+    const syncReadState = () => {
+      setNotificationsReadAt(Number(window.localStorage.getItem(NOTIFICATION_READ_KEY)) || 0)
+    }
+    window.addEventListener('storage', syncReadState)
+    window.addEventListener('dashpoint:notifications-read', syncReadState)
+    return () => {
+      window.removeEventListener('storage', syncReadState)
+      window.removeEventListener('dashpoint:notifications-read', syncReadState)
+    }
+  }, [])
 
   const user     = getCurrentUser()
   const initials = user
@@ -81,11 +98,11 @@ export function AppShell({ children }) {
   }, [deliveries])
 
   const isDashboard = pathname === '/customer'
-  const showNotificationDot = notifications.length > 0 && !hasViewedNotifications && pathname !== '/customer/notifications'
+  const latestNotificationTime = notifications.reduce((latest, item) => Math.max(latest, Number(item.time) || 0), 0)
+  const showNotificationDot = notifications.length > 0 && latestNotificationTime > notificationsReadAt
 
   useEffect(() => {
     if (pathname === '/customer/notifications') {
-      setHasViewedNotifications(true)
       setNotificationsOpen(false)
     }
   }, [pathname])
@@ -108,7 +125,7 @@ export function AppShell({ children }) {
     overflow-visible
     ${
       isDashboard
-        ? 'min-h-[230px] sm:min-h-[230px] lg:min-h-[200px]'
+        ? 'min-h-[180px] sm:min-h-[180px] lg:min-h-[200px]'
         : 'hidden md:flex h-16'
     }
   `}
@@ -157,7 +174,6 @@ export function AppShell({ children }) {
           <div className="relative">
             <button
               onClick={() => {
-                setHasViewedNotifications(true)
                 setNotificationsOpen(false)
                 navigate('/customer/notifications')
               }}
@@ -296,9 +312,9 @@ export function AppShell({ children }) {
               color: isActive
                 ? '#ffffff'
                 : 'rgba(255,255,255,0.65)',
-              borderBottom: isActive
-                ? '2px solid rgba(255,255,255,0.9)'
-                : '2px solid transparent',
+              background: isActive ? 'rgba(255,255,255,0.14)' : 'transparent',
+              borderRadius: '999px',
+              padding: '0.45rem 0.75rem',
             }}
           >
             <Icon className="h-4 w-4" />
@@ -347,7 +363,7 @@ function MobileNav({ pathname }) {
   const NAV_ITEMS = [
     { to: '/customer',         label: 'Dashboard', Icon: LayoutDashboard },
         { to: '/customer/track',   label:'Track',    Icon: MapPin},
-    { to: '/customer/book',    label: 'Book',      Icon: PackagePlus, accent: false, center:true },
+    { to: '/customer/book',    label: 'Send',      Icon: PackagePlus, accent: false, center:true },
     { to: '/customer/history', label: 'History',   Icon: History         },
     { to: '/customer/account', label: 'Account',   Icon: User            },
   ]

@@ -192,6 +192,19 @@ export function getCurrentUser() {
   return store.users.find((u) => u.id === store.session.userId) ?? null
 }
 
+export function updateCurrentUser(updates) {
+  hydrate()
+  if (!store.session) return null
+  let updatedUser = null
+  store.users = store.users.map((user) => {
+    if (user.id !== store.session.userId) return user
+    updatedUser = { ...user, ...updates }
+    return updatedUser
+  })
+  emit()
+  return updatedUser
+}
+
 export function createDelivery(input) {
   const km = distance(input.pickup.coords, input.dropoff.coords)
   const d = {

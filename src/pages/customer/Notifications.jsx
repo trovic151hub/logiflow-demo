@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Bell, Clock3, PackageCheck, Truck } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { useStore } from '@/lib/mock-store'
+
+const NOTIFICATION_READ_KEY = 'dashpoint-notifications-read-at'
 
 function formatTime(value) {
   if (!value) return ''
@@ -17,6 +19,10 @@ function formatTime(value) {
 
 export default function NotificationsPage() {
   const user = useRequireAuth()
+  const [readAt, setReadAt] = useState(() => {
+    if (typeof window === 'undefined') return 0
+    return Number(window.localStorage.getItem(NOTIFICATION_READ_KEY)) || 0
+  })
   const deliveries = useStore((s) => (user ? s.deliveries.filter((d) => d.customerId === user.id) : []))
 
   const notifications = useMemo(() => {
@@ -78,14 +84,32 @@ export default function NotificationsPage() {
 
   if (!user) return null
 
+  const latestNotificationTime = notifications.reduce((latest, item) => Math.max(latest, Number(item.time) || 0), 0)
+
+  function markAllRead() {
+    const nextReadAt = Date.now()
+    window.localStorage.setItem(NOTIFICATION_READ_KEY, String(nextReadAt))
+    setReadAt(nextReadAt)
+    window.dispatchEvent(new Event('dashpoint:notifications-read'))
+  }
+
   return (
     <AppShell>
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <div className='w-full'>
-            <p className="text-[10px] font-bold  uppercase text-center tracking-[0.24em] text-slate-400">Notifications</p>
-            <h1 className="text-2xl font-bold  text-center text-slate-900">Recent activity</h1>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Notifications</p>
+            <h1 className="text-2xl font-bold text-[#102A6B]">Recent activity</h1>
           </div>
+          {notifications.length > 0 && (
+            <button
+              type="button"
+              onClick={markAllRead}
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#102A6B] shadow-sm transition hover:bg-blue-50"
+            >
+              Read all
+            </button>
+          )}
         </div>
 
         {notifications.length === 0 ? (
@@ -103,7 +127,8 @@ export default function NotificationsPage() {
               return (
                 <li key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+                    <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${Number(item.time) > readAt ? 'bg-blue-50 text-brand' : 'bg-slate-100 text-slate-600'}`}>
+                      {Number(item.time) > readAt && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />}
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
