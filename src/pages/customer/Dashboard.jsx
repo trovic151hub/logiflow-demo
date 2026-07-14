@@ -1,10 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Package,
-  PackagePlus,
   PackageCheck,
-  PackageSearch,
-  History,
+  PackagePlus,
   Clock,
   ArrowRight,
   ScanLine,
@@ -19,12 +16,12 @@ import { useEffect, useState } from 'react'
 import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { useStore, STATUS_LABEL } from '@/lib/mock-store'
-
+1
 const QUICK_ACTIONS = [
-  { label: 'Send Package',    Icon: PackagePlus,   to: '/customer/book',    bg: '#EFF6FF', icon: '#2563EB' },
-  { label: 'Receive Package', Icon: PackageCheck,  to: '/customer/receive', bg: '#F0FDF4', icon: '#16A34A' },
-  { label: 'Track Order',     Icon: PackageSearch, to: '/customer/history', bg: '#F5F3FF', icon: '#7C3AED' },
-  { label: 'Order History',   Icon: History,       to: '/customer/history', bg: '#FFFBEB', icon: '#D97706' },
+  { label: 'Send Package', to: '/customer/book', image: '/delivery-box.png', caption: 'Book pickup' },
+  // { label: 'Receive Package', Icon: PackageCheck,  to: '/customer/receive', bg: '#F0FDF4', icon: '#16A34A' },
+  { label: 'Receive Package', to: '/customer/track', image: '/receiver.png', caption: 'View incoming' },
+  // { label: 'Order History',   Icon: History,       to: '/customer/history', bg: '#FFFBEB', icon: '#D97706' },
 ]
 
 const STATUS_BADGE = {
@@ -130,10 +127,10 @@ export default function CustomerDashboard() {
       ─────────────────────────────────────────────────────────────── */}
       <main
         className="w-full mx-auto flex flex-col items-center px-4 sm:px-6 lg:px-8 pb-10"
-        style={{ maxWidth: '80em', marginTop: '-2.5rem' }}
+        style={{ maxWidth: '80em', marginTop: '-5.75rem' }}
       >
         
-        {/* ── Step 1: Stats + tracking card ──────────── */}
+        {/* ── Step 1: Stats + tracking card(HIDDEN) ──────────── */}
 <div
   className="
     w-full
@@ -149,7 +146,7 @@ export default function CustomerDashboard() {
   style={{
     border: '1px solid #f0e2e3',
     zIndex:1300,
-   
+   display:'none'
   }}
 >
   {/* Tracking input row */}
@@ -273,34 +270,39 @@ export default function CustomerDashboard() {
 </div>
 
         {/* ── Step 2: Quick actions ────────────────────────────────── */}
-        <section className="mb-6 w-full">
-          <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-3 px-1">
-            Quick actions
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
-            {QUICK_ACTIONS.map(({ label, Icon, to, bg, icon }) => (
+        <section className="mb-6 mt-18 w-full">
+          <div className="mb-3 flex items-center justify-between px-1 text-white">
+            <p className="text-[10px] uppercase tracking-widest font-bold opacity-75">
+              Quick actions
+            </p>
+            <span className="text-[10px] font-semibold opacity-70">Send or receive packages</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {QUICK_ACTIONS.map(({ label, to, image, caption }) => (
               <Link
                 key={label}
                 to={to}
-                className="flex flex-col items-center gap-2.5 rounded-2xl bg-white p-4 transition-shadow hover:shadow-md"
-                style={{ border: '1px solid #E2E8F0' }}
+                className="group relative min-h-[132px] overflow-hidden rounded-2xl bg-white/15 p-3 text-white shadow-lg shadow-blue-950/10 ring-1 ring-white/20 transition hover:bg-white/20 sm:min-h-[156px] sm:p-4"
               >
-                <div
-                  className="flex h-11 w-11 items-center justify-center rounded-xl"
-                  style={{ background: bg }}
-                >
-                  <Icon className="h-5 w-5" style={{ color: icon }} />
+              
+                <div className="relative flex h-full flex-col justify-between gap-5">
+                  <div className='flex w-full justify-center items-center'>
+                    <span className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm">
+                    <img src={image} alt="" className="h-full w-full  object-cover" />
+                  </span>
+                  </div>
+                  <div>
+                    <p className="text-black/75 font-semibold leading-tight text-center sm:text-lg">{label}</p>
+                    <p className="mt-1 text-xs font-semibold text-center text-black/65">{caption}</p>
+                  </div>
                 </div>
-                <span className="text-xs font-semibold text-slate-600 text-center leading-tight">
-                  {label}
-                </span>
               </Link>
             ))}
           </div>
         </section>
 
         {/* ── Step 3: Tips carousel ─────────────────────────────────── */}
-        <section className="mb-6 w-full">
+        <section className="mb-6 w-full hidden">
           <TipsCarousel />
         </section>
 
@@ -375,7 +377,7 @@ export default function CustomerDashboard() {
                       className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
                         d.status === 'delivered'
                           ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                          : 'border-slate-200 bg-black text-white hover:bg-slate-800'
+                          : 'border-blue-900 bg-[#102A6B] text-white hover:bg-[#0B1F52]'
                       }`}
                     >
                       {d.status === 'delivered' ? 'Completed' : 'Track'}

@@ -1,10 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { ArrowLeft, Clock, Package, CheckCircle, ChevronRight, MapPin, Scale, Route as RouteIcon } from 'lucide-react'
+import {
+  ArrowLeft,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  MapPin,
+  Package,
+  ReceiptText,
+  Route as RouteIcon,
+  Scale,
+} from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useRequireAuth } from '@/lib/use-require-auth'
-import { useStore, STATUS_LABEL } from '@/lib/mock-store'
+import { STATUS_LABEL, useStore } from '@/lib/mock-store'
 
 const STATUS_STYLES = {
   pending: { badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500', rail: 'bg-orange-500' },
@@ -16,8 +26,6 @@ function statusStyle(status) {
   return STATUS_STYLES[status] || DEFAULT_STATUS_STYLE
 }
 
-// Formats an ISO/date-ish value defensively — several delivery records in the
-// mock store may not carry every timestamp field, so this never throws.
 function formatDateTime(value) {
   if (!value) return null
   const date = new Date(value)
@@ -39,20 +47,18 @@ export default function History() {
 
   if (!user) return null
 
-  const handleBack = () => {
+  const pending = deliveries.filter((d) => d.status === 'pending')
+  const active = deliveries.filter((d) => d.status !== 'delivered' && d.status !== 'cancelled')
+  const completed = deliveries.filter((d) => d.status === 'delivered')
+  const sortedDeliveries = [...deliveries].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+
+  function handleBack() {
     if (window.history.state && window.history.state.idx > 0) {
       navigate(-1)
     } else {
       navigate('/customer')
     }
   }
-
-  const pending = deliveries.filter((d) => d.status === 'pending')
-  const active = deliveries.filter((d) => d.status !== 'delivered' && d.status !== 'cancelled')
-  const completed = deliveries.filter((d) => d.status === 'delivered')
-
-  // Sort all deliveries newest first so freshly placed orders always appear at top
-  const sortedDeliveries = [...deliveries].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
 
   function openInvoice(delivery) {
     setActiveDelivery(delivery)
@@ -66,144 +72,46 @@ export default function History() {
 
   return (
     <AppShell>
-      <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         <button
           type="button"
           onClick={handleBack}
           aria-label="Go back"
-          className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+          className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-[#102A6B]"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-center font-bold tracking-tight">Delivery history</h1>
-            {/* <p className="mt-2 text-sm text-center text-slate-500">Every shipment you've booked, in one place — tap any row for the full record.</p> */}
-          </div>
-          {/* <Link
-            to="/customer/book"
-            className="inline-flex items-center justify-center rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand/20 hover:bg-brand-hover"
-          >
-            + Book new delivery
-          </Link> */}
+        <div className="text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">History</p>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-[#102A6B]">Delivery history</h1>
         </div>
 
-        {/* Stat row — flex-wrap keeps this contained on every screen; if three
-            cards can't fit on one line, the row wraps instead of pushing the
-            page wider. */}
-        <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
+        <div className="mt-6 flex flex-wrap gap-3 sm:gap-4">
           <StatCard icon={Package} label="Pending" value={pending.length} tone="text-orange-600 bg-orange-500/10" />
           <StatCard icon={Clock} label="In progress" value={active.length} tone="text-brand bg-brand/10" />
           <StatCard icon={CheckCircle} label="Completed" value={completed.length} tone="text-emerald-600 bg-emerald-500/10" />
         </div>
 
-        {/* min-w-0 on both the grid track and the card below is what actually
-            stops the table from stretching the whole page: flex/grid items
-            default to min-width:auto, so without it the table's intrinsic
-            width pushes this container (and the page) wider instead of
-            scrolling inside its own box. */}
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <section className="min-w-0 space-y-6">
-            <div className="min-w-0 rounded-[32px] border border-slate-200 bg-white shadow-sm">
-              <div className="px-6 py-5 border-b border-slate-200">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Your shipments</h2>
-                <p className="mt-2 text-sm text-slate-500">Tap any shipment to see its full details, timestamps, and invoice.</p>
+        <section className="mt-6 space-y-3">
+          {deliveries.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                <Package className="h-6 w-6" />
               </div>
-
-              {deliveries.length === 0 ? (
-                <div className="px-6 py-14 text-center text-slate-500">
-                  No deliveries yet.{' '}
-                  <Link to="/customer/book" className="text-brand font-semibold hover:underline">
-                    Book one now
-                  </Link>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[760px] text-sm">
-                    <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                      <tr>
-                        <th className="text-left px-6 py-4 font-semibold text-slate-900">Order</th>
-                        <th className="text-left px-6 py-4 font-semibold text-slate-900">Route</th>
-                        <th className="text-left px-6 py-4 font-semibold text-slate-900">Type</th>
-                        <th className="text-left px-6 py-4 font-semibold text-slate-900">Status</th>
-                        <th className="text-left px-6 py-4 font-semibold text-slate-900">Booked</th>
-                        <th className="text-right px-6 py-4 font-semibold text-slate-900">Price</th>
-                        <th className="w-10 px-4 py-4" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {sortedDeliveries.map((d) => {
-                        const style = statusStyle(d.status)
-                        const booked = formatDateTime(d.createdAt)
-                        return (
-                          <tr
-                            key={d.id}
-                            onClick={() => openInvoice(d)}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openInvoice(d)}
-                            className="group cursor-pointer bg-white transition-colors hover:bg-slate-50 focus:outline-none focus-visible:bg-slate-50"
-                          >
-                            <td className="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">
-                              <span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${style.dot} align-middle`} />
-                              {d.id}
-                            </td>
-                            <td className="px-6 py-4 text-slate-600">
-                              <div className="flex max-w-[260px] items-center gap-2 text-sm">
-                                <span className="truncate">{d.pickup?.address}</span>
-                                <span className="flex-shrink-0 text-slate-400">→</span>
-                                <span className="truncate">{d.dropoff?.address}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-slate-600 font-medium whitespace-nowrap">{d.packageType}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex rounded-full px-3 py-1 text-[10px] font-semibold uppercase ${style.badge}`}>
-                                {STATUS_LABEL[d.status]}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-slate-500 whitespace-nowrap">{booked ?? '—'}</td>
-                            <td className="px-6 py-4 text-right font-semibold text-slate-900 whitespace-nowrap">₦{d.price}</td>
-                            <td className="px-4 py-4 text-slate-300 transition-colors group-hover:text-brand">
-                              <ChevronRight className="h-4 w-4" />
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <p className="mt-4 text-sm text-slate-500">
+                No deliveries yet.{' '}
+                <Link to="/customer/book" className="font-semibold text-brand hover:underline">
+                  Book one now
+                </Link>
+              </p>
             </div>
-          </section>
-
-          <aside className="min-w-0 space-y-6">
-            <div className="rounded-[32px] border border-slate-200 bg-slate-50 p-6 shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Pending shipments</p>
-              <p className="mt-3 text-sm text-slate-600">Orders waiting for confirmation or pickup are listed here.</p>
-              <div className="mt-5 space-y-4">
-                {pending.slice(0, 3).map((delivery) => (
-                  <button
-                    key={delivery.id}
-                    type="button"
-                    onClick={() => openInvoice(delivery)}
-                    className="block w-full rounded-[24px] bg-white p-4 text-left shadow-sm transition hover:shadow-md"
-                  >
-                    <p className="text-sm font-semibold text-slate-900">{delivery.id}</p>
-                    <p className="mt-2 truncate text-xs text-slate-500">{delivery.pickup?.address} → {delivery.dropoff?.address}</p>
-                    <p className="mt-3 text-xs uppercase tracking-[0.2em] text-orange-500">{STATUS_LABEL[delivery.status]}</p>
-                  </button>
-                ))}
-                {pending.length === 0 && <p className="text-sm text-slate-500">You have no pending shipments right now.</p>}
-              </div>
-            </div>
-
-            <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Need the invoice?</p>
-              <p className="mt-3 text-sm text-slate-600">Tap any shipment on the left to open its full record — route, timestamps, weight, and price all in one view.</p>
-            </div>
-          </aside>
-        </div>
+          ) : (
+            sortedDeliveries.map((delivery) => (
+              <HistoryBlock key={delivery.id} delivery={delivery} onClick={() => openInvoice(delivery)} />
+            ))
+          )}
+        </section>
 
         <Dialog open={open} onOpenChange={(value) => setOpen(value)}>
           <DialogContent className="max-w-2xl">
@@ -231,7 +139,7 @@ export default function History() {
                     setOpen(false)
                     navigate('/customer/track/' + activeDelivery.id)
                   }}
-                  className="rounded-3xl bg-brand px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand/20 hover:bg-brand-hover"
+                  className="rounded-3xl bg-[#102A6B] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-900/20 hover:bg-[#0B1F52]"
                 >
                   Track delivery
                 </button>
@@ -241,6 +149,55 @@ export default function History() {
         </Dialog>
       </main>
     </AppShell>
+  )
+}
+
+function HistoryBlock({ delivery, onClick }) {
+  const style = statusStyle(delivery.status)
+  const booked = formatDateTime(delivery.createdAt)
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-blue-100 hover:bg-blue-50/40 hover:shadow-md"
+    >
+      <div className="flex items-start gap-3">
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${style.badge}`}>
+          <Package className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-bold text-[#102A6B]">{delivery.id}</p>
+            <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${style.badge}`}>
+              {STATUS_LABEL[delivery.status]}
+            </span>
+          </div>
+          <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+            <span className="flex min-w-0 items-center gap-2">
+              <MapPin className="h-4 w-4 shrink-0 text-brand" />
+              <span className="truncate">{delivery.pickup?.address}</span>
+            </span>
+            <span className="flex min-w-0 items-center gap-2">
+              <MapPin className="h-4 w-4 shrink-0 text-emerald-500" />
+              <span className="truncate">{delivery.dropoff?.address}</span>
+            </span>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+            <span className="inline-flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" /> {booked ?? 'Not recorded'}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <RouteIcon className="h-3.5 w-3.5" /> {delivery.distanceKm} km
+            </span>
+            <span className="inline-flex items-center gap-1.5 font-bold text-[#102A6B]">
+              <ReceiptText className="h-3.5 w-3.5" /> NGN {delivery.price}
+            </span>
+          </div>
+        </div>
+        <ChevronRight className="mt-3 h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-brand" />
+      </div>
+    </button>
   )
 }
 
@@ -270,11 +227,9 @@ function ShipmentDetails({ delivery: d }) {
           </span>
           {d.trackingId && <span className="text-xs text-slate-500">Tracking ID: {d.trackingId}</span>}
         </div>
-        <p className="text-lg font-semibold text-slate-900">₦{d.price}</p>
+        <p className="text-lg font-semibold text-[#102A6B]">NGN {d.price}</p>
       </div>
 
-      {/* Timeline — only rendered stages that have a real timestamp are marked
-          complete, so an in-progress shipment never shows a fake delivery time. */}
       <div className="rounded-3xl bg-white p-5 shadow-sm">
         <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Activity log</p>
         <ol className="mt-4 space-y-4">
@@ -285,7 +240,7 @@ function ShipmentDetails({ delivery: d }) {
                 {i < timeline.length - 1 && <span className="mt-1 h-8 w-px bg-slate-200" />}
               </div>
               <div className="min-w-0">
-                <p className={`text-sm font-semibold ${step.done ? 'text-slate-900' : 'text-slate-400'}`}>{step.label}</p>
+                <p className={`text-sm font-semibold ${step.done ? 'text-[#102A6B]' : 'text-slate-400'}`}>{step.label}</p>
                 <p className="mt-1 text-xs text-slate-500">{step.detail}</p>
                 <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-slate-400">{step.time ?? 'Not yet recorded'}</p>
               </div>
@@ -299,55 +254,46 @@ function ShipmentDetails({ delivery: d }) {
           <p className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-400">
             <MapPin className="h-3.5 w-3.5" /> Pickup
           </p>
-          <p className="mt-2 text-sm font-semibold text-slate-900">{d.pickup?.address}</p>
+          <p className="mt-2 text-sm font-semibold text-[#102A6B]">{d.pickup?.address}</p>
         </div>
         <div className="rounded-3xl bg-slate-50 p-5">
           <p className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-400">
             <MapPin className="h-3.5 w-3.5" /> Drop-off
           </p>
-          <p className="mt-2 text-sm font-semibold text-slate-900">{d.dropoff?.address}</p>
+          <p className="mt-2 text-sm font-semibold text-[#102A6B]">{d.dropoff?.address}</p>
         </div>
       </div>
 
       <div className="rounded-3xl bg-white p-5 shadow-sm">
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Package</p>
-            <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-              <Package className="h-3.5 w-3.5 text-slate-400" /> {d.packageType}
-            </p>
-          </div>
-          {d.weightKg != null && (
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Weight</p>
-              <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                <Scale className="h-3.5 w-3.5 text-slate-400" /> {d.weightKg} kg
-              </p>
-            </div>
-          )}
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Distance</p>
-            <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-              <RouteIcon className="h-3.5 w-3.5 text-slate-400" /> {d.distanceKm} km
-            </p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">ETA</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">{d.etaMinutes != null ? `${d.etaMinutes} min` : '—'}</p>
-          </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <Detail icon={Package} label="Package" value={d.packageType} />
+          {d.weightKg != null && <Detail icon={Scale} label="Weight" value={`${d.weightKg} kg`} />}
+          <Detail icon={RouteIcon} label="Distance" value={`${d.distanceKm} km`} />
+          <Detail icon={Clock} label="ETA" value={d.etaMinutes != null ? `${d.etaMinutes} min` : 'Not set'} />
         </div>
       </div>
     </div>
   )
 }
 
+function Detail({ icon: Icon, label, value }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-[#102A6B]">
+        <Icon className="h-3.5 w-3.5 text-slate-400" /> {value}
+      </p>
+    </div>
+  )
+}
+
 function StatCard({ icon: Icon, label, value, tone }) {
   return (
-    <div className="min-w-[130px] flex-1 rounded-[28px] border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+    <div className="min-w-[112px] flex-1 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className={`inline-flex h-9 w-9 items-center justify-center rounded-2xl ${tone}`}>
         <Icon className="h-4 w-4" />
       </div>
-      <p className="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl">{value}</p>
+      <p className="mt-3 text-2xl font-semibold text-[#102A6B]">{value}</p>
       <p className="mt-1 text-xs font-medium uppercase tracking-widest text-slate-500">{label}</p>
     </div>
   )

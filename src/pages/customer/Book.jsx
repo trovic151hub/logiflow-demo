@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  MapPin, Zap, Package, Leaf, ArrowLeft, ArrowRight,
+  MapPin, ArrowLeft, ArrowRight,
   CheckCircle2, ArrowLeftRight, Navigation, AlertTriangle,
   Maximize2, X, ChevronDown,
 } from 'lucide-react'
@@ -172,9 +172,9 @@ const ADDRESS_SUGGESTIONS = [
 ]
 
 const PACKAGE_TYPES = [
-  { id: 'Express',  label: 'Express',  desc: 'Fastest delivery',   Icon: Zap,     surcharge: 4, accent: '#eab308' },
-  { id: 'Cargo',    label: 'Cargo',    desc: 'Heavy & bulky items', Icon: Package, surcharge: 8, accent: '#3b82f6' },
-  { id: 'Electric', label: 'Electric', desc: 'Eco-friendly ride',   Icon: Leaf,    surcharge: 2, accent: '#16a34a' },
+  { id: 'Express', label: 'Express', desc: 'Fastest delivery', image: '/sedan.png', surcharge: 4, accent: '#eab308' },
+  { id: 'Cargo', label: 'Cargo', desc: 'Heavy & bulky items', image: '/express-delivery.png', surcharge: 8, accent: '#3b82f6' },
+  { id: 'Electric', label: 'Motorbike', desc: 'Small items delivery', image: '/motor.png', surcharge: 2, accent: '#16a34a' },
 ]
 
 const STEPS = ['Route', 'Package', 'Review']
@@ -374,7 +374,7 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-black-400">{label}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
               <p className="mt-0.5 text-xs text-slate-400">{hint}</p>
             </div>
             <span className={`flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-opacity-30 ${dotColor}`}>
@@ -910,21 +910,21 @@ export default function Book() {
       <main className="min-h-screen px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-8">
         <div className="mx-auto max-w-6xl">
           {/* Back button */}
-          <button
+          {/* <button
             type="button"
             onClick={handleBack}
             aria-label="Go back"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4" />
-          </button>
+          </button> */}
 
           {/* Page grid */}
           <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
             {/* ── Left: form column ── */}
             <div className="min-w-0 space-y-4">
               {/* Header card */}
-              <div className="rounded-2xl border mt-5 border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-7">
+              {/* <div className="rounded-2xl border mt-5 border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-7">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
@@ -941,7 +941,7 @@ export default function Book() {
                     Step {step + 1} / 3
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Main form card */}
               <div className="rounded-2xl border border-slate-200 bg-white px-5 py-6 shadow-sm sm:px-7">
@@ -1013,8 +1013,8 @@ export default function Book() {
                         <p className="mb-3 text-sm font-semibold text-slate-700">
                           Choose a service
                         </p>
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          {PACKAGE_TYPES.map(({ id, label, desc, Icon, surcharge, accent }) => {
+                        <div className="grid gap-3">
+                          {PACKAGE_TYPES.map(({ id, label, desc, image, surcharge }) => {
                             const active = pkg === id;
                             return (
                               <button
@@ -1022,7 +1022,7 @@ export default function Book() {
                                 type="button"
                                 onClick={() => setPkg(id)}
                                 className={[
-                                  "group relative rounded-2xl border p-4 text-left transition-all duration-200",
+                                  "group relative flex items-stretch gap-4 rounded-2xl border p-3 text-left transition-all duration-200",
                                   active
                                     ? "border-brand bg-brand/5 shadow-md ring-2 ring-brand/10"
                                     : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white",
@@ -1033,19 +1033,20 @@ export default function Book() {
                                     <CheckCircle2 className="h-3 w-3 text-white" />
                                   </span>
                                 )}
-                                <Icon
-                                  className="mb-2.5 h-5 w-5 transition-colors"
-                                  style={{ color: active ? accent : "#94a3b8" }}
-                                />
-                                <p
-                                  className={`text-sm font-semibold ${active ? "text-slate-900" : "text-slate-600"}`}
-                                >
-                                  {label}
-                                </p>
-                                <p className="mt-0.5 text-xs text-slate-400">{desc}</p>
-                                <p className="mt-3 text-xs font-bold text-slate-600">
-                                  ≈ ₦{Math.round(km * 3 + surcharge)}
-                                </p>
+                                <span className=" h-10 w-12 shrink-0 overflow-hidden rounded-xl lg:h-20 sm:w-24 ">
+                                  <img src={image} alt="" className="h-full w-full object-cover " />
+                                </span>
+                                <span className="flex min-w-0 flex-1 flex-col justify-center pr-7">
+                                  <span
+                                    className={`text-sm font-semibold ${active ? "text-[#102A6B]" : "text-slate-700"}`}
+                                  >
+                                    {label}
+                                  </span>
+                                  <span className="mt-1 text-xs leading-5 text-slate-500">{desc}</span>
+                                  <span className="mt-2 text-xs font-bold text-[#102A6B]">
+                                    Est. ₦{Math.round(km * 3 + surcharge)}
+                                  </span>
+                                </span>
                               </button>
                             );
                           })}

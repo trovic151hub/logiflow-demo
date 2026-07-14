@@ -1,6 +1,6 @@
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { Phone, X, CheckCircle, ArrowLeft, ClipboardList, UserCheck, Package, Truck, Copy, MapPinned, LoaderCircle, MapMinusIcon, MapPin } from 'lucide-react'
+import { Phone, X, CheckCircle, ArrowLeft, ClipboardList, UserCheck, Package, Truck, Copy, MapPinned, LoaderCircle, MapPin, Search } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { DeliveryMap } from '@/components/delivery-map'
 import { useRequireAuth } from '@/lib/use-require-auth'
@@ -18,6 +18,7 @@ export default function Track() {
   const location = useLocation()
   const [copied, setCopied] = useState(false)
   const [lookupSettled, setLookupSettled] = useState(false)
+  const [trackingCode, setTrackingCode] = useState('')
   const deliveries = useStore((s) => (user ? s.deliveries.filter((d) => d.customerId === user.id) : []))
   const delivery = useStore((s) => s.deliveries.find((d) => d.id === id || d.trackingId === id))
   const trackingId = location.state?.trackingId ?? delivery?.trackingId ?? id
@@ -73,6 +74,13 @@ export default function Track() {
     navigator.clipboard?.writeText(trackingId).then(() => setCopied(true))
   }
 
+  function handleTrackLookup(event) {
+    event.preventDefault()
+    const value = trackingCode.trim()
+    if (!value) return
+    navigate(`/customer/track/${encodeURIComponent(value)}`, { state: { trackingId: value } })
+  }
+
   if (!user) return null
 
   const handleBack = () => {
@@ -115,9 +123,24 @@ export default function Track() {
         <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6 flex flex-col gap-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.24em]  text-center text-slate-400">Track hub</p>
-            <h1 className="text-2xl text-center font-bold text-slate-900">Your deliveries</h1>
-           <p className="text-sm  text-center text-slate-500">Open any order to view its live status and route.</p>
+            <h1 className="text-2xl text-center font-bold text-[#102A6B]">Track a delivery</h1>
+           <p className="text-sm  text-center text-slate-500">Enter a tracking code or open any order to view its live status and route.</p>
           </div>
+
+          <form onSubmit={handleTrackLookup} className="mb-6 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex sm:items-center sm:gap-3">
+            <div className="relative min-w-0 flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={trackingCode}
+                onChange={(event) => setTrackingCode(event.target.value)}
+                placeholder="Enter tracking code"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-3 text-sm font-semibold text-[#102A6B] outline-none transition focus:border-brand focus:bg-white"
+              />
+            </div>
+            <button type="submit" className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-[#102A6B] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0B1F52] sm:mt-0 sm:w-auto">
+              Track now
+            </button>
+          </form>
 
           {visibleTabs.length > 0 && (
             <div className="mb-5 grid grid-cols-3 gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
@@ -128,8 +151,8 @@ export default function Track() {
                   onClick={() => navigate(`/customer/track?tab=${tab.key}`)}
                   className={`min-w-0 rounded-xl px-2 py-2.5 text-center text-[11px] font-bold transition-colors sm:text-sm ${
                     activeTab === tab.key
-                      ? 'bg-black text-white'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                      ? 'bg-[#102A6B] text-white'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#102A6B]'
                   }`}
                 >
                   <span className="block truncate">{tab.label}</span>
@@ -147,7 +170,7 @@ export default function Track() {
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
               <MapPin className="h-6 w-6" />
             </div>
-            <h2 className="mt-4 text-lg font-semibold text-slate-900">No activity yet</h2>
+            <h2 className="mt-4 text-lg font-semibold text-[#102A6B]">No activity yet</h2>
 
             <p className="mt-2 text-sm text-slate-500">Your shipment updates will appear here once a booking is created.</p>
           </div>
@@ -170,7 +193,7 @@ export default function Track() {
                     <Link
                       to={`/customer/track/${item.id}`}
                        reloadDocument
-                      className="inline-flex w-fit items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                      className="inline-flex w-fit items-center justify-center rounded-lg bg-[#102A6B] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0B1F52]"
                     >
                       Track
                     </Link>
