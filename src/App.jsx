@@ -11,7 +11,6 @@ import NotificationsPage from './pages/customer/Notifications'
 import History from './pages/customer/History'
 import Account from './pages/customer/Account'
 import Help from './pages/customer/Help'
-import ChooseRole from './pages/ChooseRole'
 import RiderDashboard from './pages/rider/Dashboard'
 import RiderJob from './pages/rider/Job'
 
@@ -73,7 +72,6 @@ export default function App() {
           <Route path="/customer/track/:id" element={<Track />} />
           <Route path="/customer/account" element={<Account />} />
           <Route path="/customer/help" element={<Help />} />
-          <Route path="/choose-role" element={<ChooseRole />} />
           <Route path="/rider" element={<RiderDashboard />} />
           <Route path="/rider/job/:id" element={<RiderJob />} />
           <Route path="*" element={<NotFound />} />

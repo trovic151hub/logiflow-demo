@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Package, ShieldCheck, Zap, ChevronDown, CheckCircle2, Navigation } from "lucide-react";
+import { ArrowRight, Package, ShieldCheck, Zap, ChevronDown, CheckCircle2, Navigation, Menu, Bike } from "lucide-react";
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 
 export default function LogisticsLanding() {
   const { scrollY } = useScroll();
@@ -29,21 +30,71 @@ export default function LogisticsLanding() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <Link
-              to="/auth"
-              className="text-[13px] sm:text-sm font-bold text-white px-2 sm:px-4 py-2"
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-label="Open menu"
+                className="flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 shrink-0 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-colors"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent
+              side="right"
+              className="flex flex-col gap-1"
+              onCloseAutoFocus={(e) => e.preventDefault()}
             >
-              Log in
-            </Link>
+              <SheetHeader>
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
 
-            <Link
-              to="/auth"
-              className="text-[13px] sm:text-sm font-bold bg-white text-blue-600 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 shadow-lg"
-            >
-              Sign up
-            </Link>
-          </div>
+              <SheetClose asChild>
+                <a
+                  href="#features"
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  Features
+                </a>
+              </SheetClose>
+
+              <SheetClose asChild>
+                <a
+                  href="#business"
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  For Business
+                </a>
+              </SheetClose>
+
+              <div className="my-1 border-t border-slate-200" />
+
+              <Link
+                to="/auth"
+                state={{ role: 'rider' }}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <Bike className="h-4 w-4" />
+                Become a rider
+              </Link>
+
+              <Link
+                to="/auth"
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                Log in
+              </Link>
+
+              <Link
+                to="/auth"
+                state={{ role: 'customer' }}
+                className="mt-2 flex items-center justify-center gap-2 rounded-full bg-blue-600 text-white px-6 py-3 text-sm font-bold hover:bg-blue-500 transition-colors"
+              >
+                Sign up
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </SheetContent>
+          </Sheet>
         </div>
       </nav>
       {/* Hero Section */}
@@ -147,6 +198,7 @@ w-full sm:w-auto"
             >
               <Link
                 to="/auth"
+                state={{ role: 'customer' }}
                 className="flex items-center justify-center gap-2 rounded-full bg-blue-600 text-white px-8 py-4 text-sm font-bold hover:bg-blue-500 transition-all hover:scale-105 shadow-xl hover:shadow-blue-600/20"
               >
                 I need a delivery
@@ -154,6 +206,7 @@ w-full sm:w-auto"
               </Link>
               <Link
                 to="/auth"
+                state={{ role: 'rider' }}
                 className="flex items-center justify-center gap-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 px-8 py-4 text-sm font-bold text-white hover:bg-white/20 transition-colors drop-shadow-lg"
               >
                 I'm a rider
@@ -199,7 +252,7 @@ text-center items-center gap-8 opacity-40 grayscale"
       </section>
 
       {/* Features Section with Image */}
-      <section className="py-16 sm:py-24 lg:py-32 px-6 sm:px-10 relative z-10 bg-slate-50">
+      <section id="features" className="py-16 sm:py-24 lg:py-32 px-6 sm:px-10 relative z-10 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
             <motion.div
@@ -291,7 +344,7 @@ lg:text-5xl font-bold font-outfit mb-6 text-slate-900 leading-tight"
       </section>
 
       {/* Interactive Flow / Fleet Demo */}
-      <section className="py-24 px-6 sm:px-10 relative z-10 bg-white border-y border-slate-200 overflow-hidden">
+      <section id="business" className="py-24 px-6 sm:px-10 relative z-10 bg-white border-y border-slate-200 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Abstract UI Representation / Dashboard image */}
           <motion.div

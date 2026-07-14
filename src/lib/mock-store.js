@@ -166,14 +166,27 @@ export function signIn(email) {
   return user
 }
 
-export function signUp(name, email, role) {
+export function signUp(name, email, role, details = {}) {
   hydrate()
   const user = {
     id: `u-${Math.random().toString(36).slice(2, 8)}`,
     name,
     email,
     role,
-    ...(role === 'rider' ? { rating: 5, trips: 0 } : {}),
+    phone: details.phone,
+    ...(role === 'rider'
+      ? {
+          rating: 5,
+          trips: 0,
+          vehicleType: details.vehicleType,
+          vehicleColor: details.vehicleColor,
+          plateNumber: details.plateNumber,
+          licenseNumber: details.licenseNumber,
+          nin: details.nin,
+          bankName: details.bankName,
+          accountNumber: details.accountNumber,
+        }
+      : {}),
   }
   store.users = [...store.users, user]
   store.session = { userId: user.id, role }

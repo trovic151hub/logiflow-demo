@@ -1,10 +1,29 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, User, Phone, ChevronLeft } from 'lucide-react'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Phone,
+  ChevronLeft,
+  Car,
+  Palette,
+  Hash,
+  IdCard,
+  Fingerprint,
+  Landmark,
+  CreditCard,
+} from 'lucide-react'
 import { signIn, getCurrentUser, signUp } from '@/lib/mock-store'
+
+const VEHICLE_TYPES = ['Bike', 'Car', 'Van']
 
 export default function Auth() {
   const navigate = useNavigate()
+  const { state } = useLocation()
+  const role = state?.role === 'rider' ? 'rider' : 'customer'
   const [tab, setTab] = useState('login')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -16,6 +35,14 @@ export default function Auth() {
   const [signupEmail, setSignupEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [signupPassword, setSignupPassword] = useState('')
+
+  const [vehicleType, setVehicleType] = useState('')
+  const [vehicleColor, setVehicleColor] = useState('')
+  const [plateNumber, setPlateNumber] = useState('')
+  const [licenseNumber, setLicenseNumber] = useState('')
+  const [nin, setNin] = useState('')
+  const [bankName, setBankName] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
 
   useEffect(() => {
     const user = getCurrentUser()
@@ -48,7 +75,37 @@ export default function Auth() {
       setError('Please fill in all required fields.')
       return
     }
-    navigate('/choose-role', { state: { name: name.trim(), email: signupEmail.trim(), phone: phone.trim() } })
+
+    let riderDetails
+    if (role === 'rider') {
+      if (
+        !vehicleType ||
+        !vehicleColor.trim() ||
+        !plateNumber.trim() ||
+        !licenseNumber.trim() ||
+        !nin.trim() ||
+        !bankName.trim() ||
+        !accountNumber.trim()
+      ) {
+        setError('Please fill in all required vehicle and verification fields.')
+        return
+      }
+      riderDetails = {
+        vehicleType,
+        vehicleColor: vehicleColor.trim(),
+        plateNumber: plateNumber.trim(),
+        licenseNumber: licenseNumber.trim(),
+        nin: nin.trim(),
+        bankName: bankName.trim(),
+        accountNumber: accountNumber.trim(),
+      }
+    }
+
+    const user = signUp(name.trim(), signupEmail.trim(), role, {
+      phone: phone.trim(),
+      ...riderDetails,
+    })
+    navigate(user.role === 'rider' ? '/rider' : '/customer', { replace: true })
   }
 
   return (
@@ -86,6 +143,12 @@ export default function Auth() {
             Sign Up
           </button>
         </div>
+
+        {tab === 'signup' && (
+          <p className="mt-3 text-center text-xs text-slate-400">
+            Signing up as {role === 'rider' ? 'a rider' : 'a customer'}
+          </p>
+        )}
 
         {error && (
           <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-center text-xs text-red-500">
@@ -213,6 +276,117 @@ export default function Auth() {
                 </button>
               </div>
             </div>
+
+            {role === 'rider' && (
+              <>
+                <p className="mt-2 text-xs font-semibold text-slate-700">Vehicle & verification details</p>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-700">Vehicle type</label>
+                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                    <Car className="h-4 w-4 shrink-0 text-slate-400" />
+                    <select
+                      value={vehicleType}
+                      onChange={(e) => setVehicleType(e.target.value)}
+                      className="flex-1 bg-transparent text-sm outline-none text-slate-700"
+                    >
+                      <option value="" disabled>
+                        Select vehicle type
+                      </option>
+                      {VEHICLE_TYPES.map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-700">Vehicle color</label>
+                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                    <Palette className="h-4 w-4 shrink-0 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="e.g. Black"
+                      value={vehicleColor}
+                      onChange={(e) => setVehicleColor(e.target.value)}
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-700">Plate number</label>
+                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                    <Hash className="h-4 w-4 shrink-0 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="e.g. LND-234-KJ"
+                      value={plateNumber}
+                      onChange={(e) => setPlateNumber(e.target.value)}
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-700">Driver&apos;s license number</label>
+                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                    <IdCard className="h-4 w-4 shrink-0 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="License number"
+                      value={licenseNumber}
+                      onChange={(e) => setLicenseNumber(e.target.value)}
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-700">NIN (National ID Number)</label>
+                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                    <Fingerprint className="h-4 w-4 shrink-0 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="11-digit NIN"
+                      value={nin}
+                      onChange={(e) => setNin(e.target.value)}
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-700">Bank name</label>
+                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                    <Landmark className="h-4 w-4 shrink-0 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="e.g. GTBank"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-700">Bank account number</label>
+                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                    <CreditCard className="h-4 w-4 shrink-0 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="10-digit account number"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             <button
               type="submit"
