@@ -2,18 +2,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   PackageCheck,
   PackagePlus,
-  Clock,
   ArrowRight,
   ScanLine,
   Bell,
   LifeBuoy,
-  MapPin,
   Search,
   Truck,
   BellRing,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AppShell } from '@/components/app-shell'
+import { TripCard } from '@/components/trip-card'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { useStore, STATUS_LABEL } from '@/lib/mock-store'
 1
@@ -23,15 +22,6 @@ const QUICK_ACTIONS = [
   { label: 'Receive Package', to: '/customer/track', image: '/receiver.png', caption: 'View incoming' },
   // { label: 'Order History',   Icon: History,       to: '/customer/history', bg: '#FFFBEB', icon: '#D97706' },
 ]
-
-const STATUS_BADGE = {
-  pending:    'bg-amber-50 text-amber-700',
-  assigned:   'bg-blue-50 text-blue-700',
-  picked_up:  'bg-blue-50 text-blue-700',
-  in_transit: 'bg-blue-50 text-blue-700',
-  delivered:  'bg-emerald-50 text-emerald-700',
-  cancelled:  'bg-slate-100 text-slate-500',
-}
 
 const TIPS = [
   {
@@ -312,81 +302,36 @@ export default function CustomerDashboard() {
             <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2">
               Recent updates
               {recentUpdates.length > 0 && (
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-                  style={{ background: '#305CDE' }}
-                >
+                <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white">
                   {recentUpdates.length}
                 </span>
               )}
             </p>
-            <Link to="/customer/track" className="text-xs font-bold hover:underline" style={{ color: '#305CDE' }}>
+            <Link to="/customer/track" className="text-xs font-bold text-blue-600 hover:underline">
               View all →
             </Link>
           </div>
 
-          <div
-            className="rounded-2xl  bg-white"
-            style={{ border: '1px solid #E2E8F0' }}
-          >
-            {recentUpdates.length === 0 ? (
-              <div className="flex flex-col items-center py-12 gap-3">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl"
-                  style={{ background: '#F1F5F9' }}
-                >
-                  <Truck className="h-7 w-7 text-slate-300" />
-                </div>
-                <p className="text-sm text-slate-400">No delivery updates yet.</p>
-                <Link
-                  to="/customer/book"
-                  className="rounded-xl px-4 py-2 text-xs font-bold text-white hover:opacity-90"
-                  style={{ background: '#305CDE' }}
-                >
-                  Book your first delivery
-                </Link>
+          {recentUpdates.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white py-12">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
+                <Truck className="h-7 w-7 text-slate-300" />
               </div>
-            ) : (
-              <ul className="divide-y divide-slate-50">
-                {recentUpdates.map((d) => (
-                  <li key={d.id} className="px-5 py-4 flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-bold text-slate-800">{d.id}</p>
-                        <span
-                          className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                            STATUS_BADGE[d.status] ?? 'bg-slate-100 text-slate-500'
-                          }`}
-                        >
-                          {STATUS_LABEL[d.status]}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-slate-500 truncate flex items-center gap-1">
-                        <MapPin className="h-3 w-3 shrink-0" />
-                        {d.pickup.address} → {d.dropoff.address}
-                      </p>
-                      {d.estimatedDelivery && (
-                        <p className="mt-1 text-xs text-slate-400 flex items-center gap-1">
-                          <Clock className="h-3 w-3 shrink-0" />
-                          Est. arrival: {d.estimatedDelivery}
-                        </p>
-                      )}
-                    </div>
-                    <Link
-                      to={`/customer/track/${d.id}`}
-                      className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
-                        d.status === 'delivered'
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                          : 'border-blue-900 bg-[#102A6B] text-white hover:bg-[#0B1F52]'
-                      }`}
-                    >
-                      {d.status === 'delivered' ? 'Completed' : 'Track'}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+              <p className="text-sm text-slate-400">No delivery updates yet.</p>
+              <Link
+                to="/customer/book"
+                className="rounded-full bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500"
+              >
+                Book your first delivery
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {recentUpdates.map((d) => (
+                <TripCard key={d.id} delivery={d} actionTo={`/customer/track/${d.id}`} />
+              ))}
+            </div>
+          )}
         </section>
       </main>
 

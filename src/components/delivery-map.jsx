@@ -87,7 +87,7 @@ export function DeliveryMap({ pickup, dropoff, courier, className }) {
           new G.Marker({
             map,
             position: { lat: pickup.lat, lng: pickup.lng },
-            icon: { url: pinSvgUrl('#4F46E5', 'A'), scaledSize: new G.Size(32, 42), anchor: new G.Point(16, 42) },
+            icon: { url: pinSvgUrl('#2563EB', 'A'), scaledSize: new G.Size(32, 42), anchor: new G.Point(16, 42) },
             title: 'Pickup',
           })
           bounds.extend({ lat: pickup.lat, lng: pickup.lng })
@@ -107,7 +107,7 @@ export function DeliveryMap({ pickup, dropoff, courier, className }) {
           new G.Polyline({
             map,
             path: [{ lat: pickup.lat, lng: pickup.lng }, { lat: dropoff.lat, lng: dropoff.lng }],
-            strokeColor: '#4F46E5',
+            strokeColor: '#2563EB',
             strokeOpacity: 0,
             icons: [{
               icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, strokeWeight: 4, scale: 4 },

@@ -9,6 +9,7 @@ import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { AppShell } from '@/components/app-shell'
+import { BottomSheet } from '@/components/bottom-sheet'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { createDelivery } from '@/lib/mock-store'
 
@@ -158,7 +159,7 @@ const makePin = (color) =>
     iconAnchor: [6, 6],
   })
 
-const PICKUP_PIN = makePin('#6366f1')
+const PICKUP_PIN = makePin('#2563EB')
 const DROPOFF_PIN = makePin('#16a34a')
 
 /* ─── Static data ────────────────────────────────────────────────────── */
@@ -272,7 +273,7 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
       <Marker position={[dropoff.lat, dropoff.lng]} icon={DROPOFF_PIN} />
       <Polyline
         positions={[[pickup.lat, pickup.lng], [dropoff.lat, dropoff.lng]]}
-        color="#6366f1"
+        color="#2563EB"
         weight={2.5}
         dashArray="7 5"
         opacity={0.8}
@@ -308,10 +309,10 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
           type="button"
           onClick={() => onUseMyLocation(type)}
           disabled={!geoReady}
-          className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left hover:bg-indigo-50 disabled:opacity-40"
+          className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left hover:bg-blue-50 disabled:opacity-40"
         >
-          <Navigation className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
-          <span className="truncate text-sm font-medium text-indigo-600">{geoLabel}</span>
+          <Navigation className="h-3.5 w-3.5 shrink-0 text-blue-600" />
+          <span className="truncate text-sm font-medium text-blue-700">{geoLabel}</span>
         </button>
 
         {items.length === 0 ? (
@@ -324,7 +325,7 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
               onClick={() => onSelectAddress(type, item)}
               className={[
                 'flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50',
-                query === item.label ? 'bg-slate-50 font-semibold text-brand' : '',
+                query === item.label ? 'bg-slate-50 font-semibold text-blue-600' : '',
               ].join(' ')}
             >
               <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-300" />
@@ -355,9 +356,9 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
     const isPickup = type === 'pickup'
     const label = isPickup ? 'Pickup' : 'Dropoff'
     const hint = isPickup ? 'Where should we collect the package?' : 'Where is it going?'
-    const pinColor = isPickup ? 'text-indigo-500' : 'text-green-600'
-    const dotColor = isPickup ? 'bg-indigo-100 ring-indigo-300' : 'bg-green-100 ring-green-300'
-    const dotInner = isPickup ? 'bg-indigo-500' : 'bg-green-600'
+    const pinColor = isPickup ? 'text-blue-600' : 'text-green-600'
+    const dotColor = isPickup ? 'bg-blue-100 ring-blue-300' : 'bg-green-100 ring-green-300'
+    const dotInner = isPickup ? 'bg-blue-600' : 'bg-green-600'
 
     const handleFocus = () => {
       setFocused(true)
@@ -395,7 +396,7 @@ function LiveMap({ pickup, dropoff, className, zoom = 12, zoomControl = true }) 
             }}
             className={[
               'flex min-w-0 cursor-text items-center gap-2 rounded-2xl border bg-slate-50 px-3 py-2 transition-all duration-150',
-              focused ? 'border-indigo-400 shadow-[0_0_0_3px_rgba(99,102,241,0.10)]' : 'border-slate-200',
+              focused ? 'border-blue-400 shadow-[0_0_0_3px_rgba(37,99,235,0.10)]' : 'border-slate-200',
             ].join(' ')}
           >
             <MapPin className={`h-4 w-4 shrink-0 ${pinColor}`} />
@@ -635,8 +636,8 @@ export default function Book() {
                 <div
                   className={[
                     'flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-300',
-                    done   ? 'border-brand bg-brand text-white'
-                    : active ? 'border-brand bg-white text-brand shadow-[0_0_0_4px_rgba(99,102,241,0.12)]'
+                    done   ? 'border-blue-600 bg-blue-600 text-white'
+                    : active ? 'border-blue-600 bg-white text-blue-600 shadow-[0_0_0_4px_rgba(37,99,235,0.12)]'
                     :          'border-slate-200 bg-white text-slate-400',
                   ].join(' ')}
                 >
@@ -649,7 +650,7 @@ export default function Book() {
                 <span
                   className={[
                     'hidden text-[10px] font-semibold uppercase tracking-widest transition-colors sm:block',
-                    active ? 'text-brand'
+                    active ? 'text-blue-600'
                     : done  ? 'text-slate-500'
                     :         'text-slate-300',
                   ].join(' ')}
@@ -662,7 +663,7 @@ export default function Book() {
               {idx < STEPS.length - 1 && (
                 <div className="relative mx-2 h-0.5 flex-1 overflow-hidden rounded-full bg-slate-200">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-brand transition-all duration-500"
+                    className="absolute inset-y-0 left-0 rounded-full bg-blue-600 transition-all duration-500"
                     style={{ width: step > idx ? '100%' : '0%' }}
                   />
                 </div>
@@ -706,7 +707,7 @@ export default function Book() {
           {/* legend */}
           <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" /> Pickup
+              <span className="h-2.5 w-2.5 rounded-full bg-blue-600" /> Pickup
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-green-600" /> Dropoff
@@ -724,7 +725,7 @@ export default function Book() {
             ].map(({ label, val, accent }) => (
               <div key={label} className="rounded-xl bg-slate-50 p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-slate-400">{label}</p>
-                <p className={`mt-1 text-sm font-bold ${accent ? 'text-brand' : 'text-slate-800'}`}>
+                <p className={`mt-1 text-sm font-bold ${accent ? 'text-blue-600' : 'text-slate-800'}`}>
                   {val}
                 </p>
               </div>
@@ -778,7 +779,7 @@ export default function Book() {
             ].map(({ label, val, accent }) => (
               <div key={label} className="rounded-xl bg-slate-50 p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-slate-400">{label}</p>
-                <p className={`mt-0.5 text-sm font-bold ${accent ? 'text-brand' : 'text-slate-800'}`}>
+                <p className={`mt-0.5 text-sm font-bold ${accent ? 'text-blue-600' : 'text-slate-800'}`}>
                   {val}
                 </p>
               </div>
@@ -806,88 +807,54 @@ export default function Book() {
     return (
       <>
         {/* circular thumbnail — fixed at bottom-right on mobile */}
-        {!mobileMapOpen && (
-          <div className="fixed bottom-24 right-4 z-40 flex flex-col items-center gap-2 lg:hidden">
-            <button
-              onClick={() => setMobileMapOpen(true)}
-              className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-white shadow-xl ring-2 ring-indigo-300"
-              aria-label="Show map"
-            >
-              {/* tiny live map in the thumb */}
-              <div className="pointer-events-none h-full w-full">
-                <LiveMap
-                  pickup={pickupCoords}
-                  dropoff={dropoffCoords}
-                  zoom={previewZoom}
-                  zoomControl={false}
-                  className="h-full w-full"
-                />
-              </div>
-              {/* "Map" label overlay */}
-              <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/40 to-transparent pb-1.5 rounded-full">
-                <span className="text-[8px] font-bold uppercase tracking-widest text-white">Map</span>
-              </div>
-            </button>
-          </div>
-        )}
+        <div className="fixed bottom-24 right-4 z-40 flex flex-col items-center gap-2 lg:hidden">
+          <button
+            onClick={() => setMobileMapOpen(true)}
+            className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-white shadow-xl ring-2 ring-blue-300"
+            aria-label="Show map"
+          >
+            {/* tiny live map in the thumb */}
+            <div className="pointer-events-none h-full w-full">
+              <LiveMap
+                pickup={pickupCoords}
+                dropoff={dropoffCoords}
+                zoom={previewZoom}
+                zoomControl={false}
+                className="h-full w-full"
+              />
+            </div>
+            {/* "Map" label overlay */}
+            <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/40 to-transparent pb-1.5 rounded-full">
+              <span className="text-[8px] font-bold uppercase tracking-widest text-white">Map</span>
+            </div>
+          </button>
+        </div>
 
         {/* bottom-sheet expansion */}
-        {mobileMapOpen && (
-          <div
-            className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 lg:hidden"
-            onClick={() => setMobileMapOpen(false)}
-          >
-            <div
-              className="flex flex-col rounded-t-3xl bg-white"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* drag handle */}
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="h-1 w-10 rounded-full bg-slate-300" />
-              </div>
-              {/* header */}
-              <div className="flex items-center justify-between px-5 py-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">Route preview</p>
-                  <p className="truncate max-w-[220px] text-xs text-slate-400">
-                    {confirmedPickup} → {confirmedDropoff}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setMobileMapOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200"
-                >
-                  <X className="h-4 w-4 text-slate-500" />
-                </button>
-              </div>
-              {/* map */}
-              <div className="h-[340px] w-full">
-                <LiveMap
-                  pickup={pickupCoords}
-                  dropoff={dropoffCoords}
-                  className="h-full w-full"
-                />
-              </div>
-              {/* stats bar */}
-              <div className="grid grid-cols-3 gap-3 border-t border-slate-100 p-4">
-                {[
-                  { label: 'ETA',      val: `${eta} min` },
-                  { label: 'Distance', val: `${km} km`   },
-                  { label: 'Price',    val: `₦${price}`, accent: true },
-                ].map(({ label, val, accent }) => (
-                  <div key={label} className="rounded-xl bg-slate-50 p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-widest text-slate-400">{label}</p>
-                    <p className={`mt-0.5 text-sm font-bold ${accent ? 'text-brand' : 'text-slate-800'}`}>
-                      {val}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              {/* safe area spacer */}
-              <div className="h-safe-area-bottom h-6" />
-            </div>
+        <BottomSheet
+          open={mobileMapOpen}
+          onOpenChange={setMobileMapOpen}
+          title="Route preview"
+          description={`${confirmedPickup} → ${confirmedDropoff}`}
+        >
+          <div className="h-[340px] w-full overflow-hidden rounded-2xl">
+            <LiveMap pickup={pickupCoords} dropoff={dropoffCoords} className="h-full w-full" />
           </div>
-        )}
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            {[
+              { label: 'ETA',      val: `${eta} min` },
+              { label: 'Distance', val: `${km} km`   },
+              { label: 'Price',    val: `₦${price}`, accent: true },
+            ].map(({ label, val, accent }) => (
+              <div key={label} className="rounded-xl bg-slate-50 p-3 text-center">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400">{label}</p>
+                <p className={`mt-0.5 text-sm font-bold ${accent ? 'text-blue-600' : 'text-slate-800'}`}>
+                  {val}
+                </p>
+              </div>
+            ))}
+          </div>
+        </BottomSheet>
       </>
     )
   }
@@ -1024,12 +991,12 @@ export default function Book() {
                                 className={[
                                   "group relative flex items-stretch gap-4 rounded-2xl border p-3 text-left transition-all duration-200",
                                   active
-                                    ? "border-brand bg-brand/5 shadow-md ring-2 ring-brand/10"
+                                    ? "border-blue-600 bg-blue-600/5 shadow-md ring-2 ring-blue-600/10"
                                     : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white",
                                 ].join(" ")}
                               >
                                 {active && (
-                                  <span className="absolute right-3 top-3 flex h-4 w-4 items-center justify-center rounded-full bg-brand">
+                                  <span className="absolute right-3 top-3 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600">
                                     <CheckCircle2 className="h-3 w-3 text-white" />
                                   </span>
                                 )}
@@ -1038,12 +1005,12 @@ export default function Book() {
                                 </span>
                                 <span className="flex min-w-0 flex-1 flex-col justify-center pr-7">
                                   <span
-                                    className={`text-sm font-semibold ${active ? "text-[#102A6B]" : "text-slate-700"}`}
+                                    className={`text-sm font-semibold ${active ? "text-blue-600" : "text-slate-700"}`}
                                   >
                                     {label}
                                   </span>
                                   <span className="mt-1 text-xs leading-5 text-slate-500">{desc}</span>
-                                  <span className="mt-2 text-xs font-bold text-[#102A6B]">
+                                  <span className="mt-2 text-xs font-bold text-blue-600">
                                     Est. ₦{Math.round(km * 3 + surcharge)}
                                   </span>
                                 </span>
@@ -1071,7 +1038,7 @@ export default function Book() {
                           onChange={(e) => setNote(e.target.value)}
                           rows={3}
                           placeholder="e.g. Call on arrival, fragile contents, leave at gate…"
-                          className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-300 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50"
+                          className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-50"
                         />
                       </div>
                     </div>
@@ -1087,8 +1054,8 @@ export default function Book() {
                         </p>
                         <div className="space-y-3">
                           <div className="flex items-start gap-3">
-                            <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100">
-                              <div className="h-2 w-2 rounded-full bg-indigo-500" />
+                            <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                              <div className="h-2 w-2 rounded-full bg-blue-600" />
                             </div>
                             <div>
                               <p className="text-[10px] uppercase tracking-widest text-slate-400">
@@ -1192,7 +1159,7 @@ export default function Book() {
                           "flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold shadow-sm transition-all active:scale-95",
                           advanceBlocked
                             ? "cursor-not-allowed bg-slate-100 text-slate-400 shadow-none"
-                            : "bg-brand text-white hover:bg-brand-hover",
+                            : "bg-blue-600 text-white hover:bg-blue-500",
                         ].join(" ")}
                       >
                         Continue
@@ -1201,7 +1168,7 @@ export default function Book() {
                     ) : (
                       <button
                         type="submit"
-                        className="flex items-center gap-2 rounded-xl bg-brand px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-hover active:scale-95 transition-all"
+                        className="flex items-center gap-2 rounded-xl bg-blue-600 px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 active:scale-95 transition-all"
                       >
                         Confirm booking
                         <CheckCircle2 className="h-4 w-4" />

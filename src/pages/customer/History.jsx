@@ -3,16 +3,15 @@ import { useState } from 'react'
 import {
   ArrowLeft,
   CheckCircle,
-  ChevronRight,
   Clock,
   MapPin,
   Package,
-  ReceiptText,
   Route as RouteIcon,
   Scale,
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { BottomSheet } from '@/components/bottom-sheet'
+import { TripCard } from '@/components/trip-card'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { STATUS_LABEL, useStore } from '@/lib/mock-store'
 
@@ -20,7 +19,7 @@ const STATUS_STYLES = {
   pending: { badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500', rail: 'bg-orange-500' },
   delivered: { badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500', rail: 'bg-emerald-500' },
 }
-const DEFAULT_STATUS_STYLE = { badge: 'bg-brand/10 text-brand', dot: 'bg-brand', rail: 'bg-brand' }
+const DEFAULT_STATUS_STYLE = { badge: 'bg-blue-50 text-blue-600', dot: 'bg-blue-600', rail: 'bg-blue-600' }
 
 function statusStyle(status) {
   return STATUS_STYLES[status] || DEFAULT_STATUS_STYLE
@@ -65,11 +64,6 @@ export default function History() {
     setOpen(true)
   }
 
-  function closeInvoice() {
-    setOpen(false)
-    setActiveDelivery(null)
-  }
-
   return (
     <AppShell>
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
@@ -77,19 +71,19 @@ export default function History() {
           type="button"
           onClick={handleBack}
           aria-label="Go back"
-          className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-[#102A6B]"
+          className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
 
         <div className="text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">History</p>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-[#102A6B]">Delivery history</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900">Delivery history</h1>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3 sm:gap-4">
           <StatCard icon={Package} label="Pending" value={pending.length} tone="text-orange-600 bg-orange-500/10" />
-          <StatCard icon={Clock} label="In progress" value={active.length} tone="text-brand bg-brand/10" />
+          <StatCard icon={Clock} label="In progress" value={active.length} tone="text-blue-600 bg-blue-50" />
           <StatCard icon={CheckCircle} label="Completed" value={completed.length} tone="text-emerald-600 bg-emerald-500/10" />
         </div>
 
@@ -101,103 +95,53 @@ export default function History() {
               </div>
               <p className="mt-4 text-sm text-slate-500">
                 No deliveries yet.{' '}
-                <Link to="/customer/book" className="font-semibold text-brand hover:underline">
+                <Link to="/customer/book" className="font-semibold text-blue-600 hover:underline">
                   Book one now
                 </Link>
               </p>
             </div>
           ) : (
             sortedDeliveries.map((delivery) => (
-              <HistoryBlock key={delivery.id} delivery={delivery} onClick={() => openInvoice(delivery)} />
+              <button
+                key={delivery.id}
+                type="button"
+                onClick={() => openInvoice(delivery)}
+                className="w-full text-left"
+              >
+                <TripCard delivery={delivery} />
+              </button>
             ))
           )}
         </section>
 
-        <Dialog open={open} onOpenChange={(value) => setOpen(value)}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{activeDelivery?.id ?? 'Shipment details'}</DialogTitle>
-              <DialogDescription>Full record for this shipment, including the activity log and timestamps.</DialogDescription>
-            </DialogHeader>
-            {activeDelivery ? (
-              <ShipmentDetails delivery={activeDelivery} />
-            ) : (
-              <div className="py-10 text-center text-slate-500">Select a shipment to see its details.</div>
-            )}
-            <DialogFooter>
+        <BottomSheet
+          open={open}
+          onOpenChange={setOpen}
+          title={activeDelivery?.id ?? 'Shipment details'}
+          description="Full record for this shipment, including the activity log and timestamps."
+          footer={
+            activeDelivery && (
               <button
                 type="button"
-                onClick={closeInvoice}
-                className="rounded-3xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={() => {
+                  setOpen(false)
+                  navigate('/customer/track/' + activeDelivery.id)
+                }}
+                className="w-full rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
               >
-                Close
+                Track delivery
               </button>
-              {activeDelivery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOpen(false)
-                    navigate('/customer/track/' + activeDelivery.id)
-                  }}
-                  className="rounded-3xl bg-[#102A6B] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-900/20 hover:bg-[#0B1F52]"
-                >
-                  Track delivery
-                </button>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            )
+          }
+        >
+          {activeDelivery ? (
+            <ShipmentDetails delivery={activeDelivery} />
+          ) : (
+            <div className="py-10 text-center text-slate-500">Select a shipment to see its details.</div>
+          )}
+        </BottomSheet>
       </main>
     </AppShell>
-  )
-}
-
-function HistoryBlock({ delivery, onClick }) {
-  const style = statusStyle(delivery.status)
-  const booked = formatDateTime(delivery.createdAt)
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-blue-100 hover:bg-blue-50/40 hover:shadow-md"
-    >
-      <div className="flex items-start gap-3">
-        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${style.badge}`}>
-          <Package className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-bold text-[#102A6B]">{delivery.id}</p>
-            <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${style.badge}`}>
-              {STATUS_LABEL[delivery.status]}
-            </span>
-          </div>
-          <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-            <span className="flex min-w-0 items-center gap-2">
-              <MapPin className="h-4 w-4 shrink-0 text-brand" />
-              <span className="truncate">{delivery.pickup?.address}</span>
-            </span>
-            <span className="flex min-w-0 items-center gap-2">
-              <MapPin className="h-4 w-4 shrink-0 text-emerald-500" />
-              <span className="truncate">{delivery.dropoff?.address}</span>
-            </span>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-            <span className="inline-flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" /> {booked ?? 'Not recorded'}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <RouteIcon className="h-3.5 w-3.5" /> {delivery.distanceKm} km
-            </span>
-            <span className="inline-flex items-center gap-1.5 font-bold text-[#102A6B]">
-              <ReceiptText className="h-3.5 w-3.5" /> NGN {delivery.price}
-            </span>
-          </div>
-        </div>
-        <ChevronRight className="mt-3 h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-brand" />
-      </div>
-    </button>
   )
 }
 
@@ -227,7 +171,7 @@ function ShipmentDetails({ delivery: d }) {
           </span>
           {d.trackingId && <span className="text-xs text-slate-500">Tracking ID: {d.trackingId}</span>}
         </div>
-        <p className="text-lg font-semibold text-[#102A6B]">NGN {d.price}</p>
+        <p className="text-lg font-semibold text-slate-900">NGN {d.price}</p>
       </div>
 
       <div className="rounded-3xl bg-white p-5 shadow-sm">
@@ -240,7 +184,7 @@ function ShipmentDetails({ delivery: d }) {
                 {i < timeline.length - 1 && <span className="mt-1 h-8 w-px bg-slate-200" />}
               </div>
               <div className="min-w-0">
-                <p className={`text-sm font-semibold ${step.done ? 'text-[#102A6B]' : 'text-slate-400'}`}>{step.label}</p>
+                <p className={`text-sm font-semibold ${step.done ? 'text-slate-900' : 'text-slate-400'}`}>{step.label}</p>
                 <p className="mt-1 text-xs text-slate-500">{step.detail}</p>
                 <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-slate-400">{step.time ?? 'Not yet recorded'}</p>
               </div>
@@ -254,13 +198,13 @@ function ShipmentDetails({ delivery: d }) {
           <p className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-400">
             <MapPin className="h-3.5 w-3.5" /> Pickup
           </p>
-          <p className="mt-2 text-sm font-semibold text-[#102A6B]">{d.pickup?.address}</p>
+          <p className="mt-2 text-sm font-semibold text-slate-900">{d.pickup?.address}</p>
         </div>
         <div className="rounded-3xl bg-slate-50 p-5">
           <p className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-400">
             <MapPin className="h-3.5 w-3.5" /> Drop-off
           </p>
-          <p className="mt-2 text-sm font-semibold text-[#102A6B]">{d.dropoff?.address}</p>
+          <p className="mt-2 text-sm font-semibold text-slate-900">{d.dropoff?.address}</p>
         </div>
       </div>
 
@@ -280,7 +224,7 @@ function Detail({ icon: Icon, label, value }) {
   return (
     <div>
       <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
-      <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-[#102A6B]">
+      <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-slate-900">
         <Icon className="h-3.5 w-3.5 text-slate-400" /> {value}
       </p>
     </div>
@@ -293,7 +237,7 @@ function StatCard({ icon: Icon, label, value, tone }) {
       <div className={`inline-flex h-9 w-9 items-center justify-center rounded-2xl ${tone}`}>
         <Icon className="h-4 w-4" />
       </div>
-      <p className="mt-3 text-2xl font-semibold text-[#102A6B]">{value}</p>
+      <p className="mt-3 text-2xl font-semibold text-slate-900">{value}</p>
       <p className="mt-1 text-xs font-medium uppercase tracking-widest text-slate-500">{label}</p>
     </div>
   )

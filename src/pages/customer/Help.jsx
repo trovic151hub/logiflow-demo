@@ -59,7 +59,7 @@ export default function Help() {
 
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-hover"
+                className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
               >
                 <Send className="h-4 w-4" /> Send request
               </button>
@@ -76,21 +76,21 @@ export default function Help() {
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Contact support</p>
               <p className="mt-3 text-sm text-slate-600">For urgent delivery issues, speak with our support team directly.</p>
-              <a href="tel:08106146952" className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-brand shadow-sm transition hover:bg-slate-100">
+              <a href="tel:08106146952" className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-blue-600 shadow-sm transition hover:bg-slate-100">
                 <PhoneCall className="h-4 w-4" /> Call 08106146952
               </a>
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <MessageCircleMore className="h-4 w-4 text-brand" /> Live support
+                <MessageCircleMore className="h-4 w-4 text-blue-600" /> Live support
               </div>
               <p className="mt-3 text-sm text-slate-600">We are available to help with tracking updates, account concerns, or booking issues.</p>
             </div>
           </aside>
         </div>
 
-        <a href="tel:08106146952" className="fixed bottom-24 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-brand px-4 py-3 text-sm font-semibold text-white shadow-xl transition hover:bg-brand-hover">
+        <a href="tel:08106146952" className="fixed bottom-24 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-xl transition hover:bg-blue-500">
           <PhoneCall className="h-4 w-4" /> 
         </a>
       </main>

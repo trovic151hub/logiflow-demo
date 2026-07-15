@@ -17,6 +17,14 @@ function formatTime(value) {
   })
 }
 
+function dayGroup(value) {
+  const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+  const diffDays = Math.round((startOfDay(new Date()) - startOfDay(new Date(Number(value)))) / 86400000)
+  if (diffDays <= 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  return 'Earlier'
+}
+
 export default function NotificationsPage() {
   const user = useRequireAuth()
   const [readAt, setReadAt] = useState(() => {
@@ -99,13 +107,13 @@ export default function NotificationsPage() {
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Notifications</p>
-            <h1 className="text-2xl font-bold text-[#102A6B]">Recent activity</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Recent activity</h1>
           </div>
           {notifications.length > 0 && (
             <button
               type="button"
               onClick={markAllRead}
-              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#102A6B] shadow-sm transition hover:bg-blue-50"
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-900 shadow-sm transition hover:bg-blue-50"
             >
               Read all
             </button>
@@ -121,31 +129,40 @@ export default function NotificationsPage() {
             <p className="mt-2 text-sm text-slate-500">Your shipment updates will appear here once a booking is created.</p>
           </div>
         ) : (
-          <ul className="space-y-3">
-            {notifications.map((item) => {
+          <div className="space-y-3">
+            {notifications.map((item, index) => {
               const Icon = item.icon
+              const group = dayGroup(item.time)
+              const showHeader = index === 0 || group !== dayGroup(notifications[index - 1].time)
               return (
-                <li key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${Number(item.time) > readAt ? 'bg-blue-50 text-brand' : 'bg-slate-100 text-slate-600'}`}>
-                      {Number(item.time) > readAt && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />}
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                          <Clock3 className="h-3 w-3" />
-                          {formatTime(item.time)}
-                        </span>
+                <div key={item.id}>
+                  {showHeader && (
+                    <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-wider text-slate-400 first:mt-0">
+                      {group}
+                    </p>
+                  )}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${Number(item.time) > readAt ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'}`}>
+                        {Number(item.time) > readAt && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />}
+                        <Icon className="h-5 w-5" />
                       </div>
-                      <p className="mt-1 text-sm text-slate-600">{item.description}</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                            <Clock3 className="h-3 w-3" />
+                            {formatTime(item.time)}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-slate-600">{item.description}</p>
+                      </div>
                     </div>
                   </div>
-                </li>
+                </div>
               )
             })}
-          </ul>
+          </div>
         )}
       </main>
     </AppShell>

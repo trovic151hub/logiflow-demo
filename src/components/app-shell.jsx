@@ -117,7 +117,7 @@ export function AppShell({ children }) {
   }, [pathname])
 
   return (
-    <div className="min-h-screen text-navy flex flex-col pb-20 md:pb-0" style={{ background: '#F8F9FA' }}>
+    <div className="min-h-screen flex flex-col pb-20 md:pb-0 bg-slate-50 text-slate-900">
 
       {/* ── Royal blue header ─────────────────────────────────────────
           Full-height with greeting on Dashboard, compact on all other pages.
@@ -139,8 +139,7 @@ export function AppShell({ children }) {
     }
   `}
   style={{
-  
-    background: 'linear-gradient(180deg, #305CDE 100%, #1E3A8A 0%)',
+    background: 'linear-gradient(180deg, #2563EB 0%, #0F172A 100%)',
   }}
 >
   {/* ── Top bar ── */}
@@ -353,14 +352,16 @@ export function AppShell({ children }) {
 
       {session && <MobileNav pathname={pathname} role={role} />}
 
-      <footer className="hidden md:flex border-t border-surface-200 bg-white px-4 sm:px-6 lg:px-8 py-4 text-xs text-slate-400 items-center justify-between max-w-7xl mx-auto w-full">
-        <span>Workspace demo · frontend-only mock data</span>
-        <button
-          onClick={() => { resetDemo(); navigate('/') }}
-          className="text-slate-500 hover:text-brand font-semibold"
-        >
-          Reset demo
-        </button>
+      <footer className="hidden md:block border-t border-surface-200 bg-white">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 text-xs text-slate-400 sm:px-6 lg:px-8">
+          <span>Workspace demo · frontend-only mock data</span>
+          <button
+            onClick={() => { resetDemo(); navigate('/') }}
+            className="text-slate-500 hover:text-blue-600 font-semibold"
+          >
+            Reset demo
+          </button>
+        </div>
       </footer>
     </div>
   )
@@ -401,7 +402,7 @@ function MobileNav({ pathname, role }) {
                 to={to}
                 className="relative flex flex-col items-center flex-1 -mt-5 pb-2"
               >
-                <div className="h-14 w-14 flex flex-col items-center justify-center rounded-2xl shadow-lg active:scale-95 transition-transform" style={{ background: '#305CDE' }}>
+                <div className="h-14 w-14 flex flex-col items-center justify-center rounded-2xl bg-blue-600 shadow-lg active:scale-95 transition-transform">
                   <Icon className="h-6 w-6 text-white" />
                   <span className="text-[10px] font-bold text-white mt-0.5">{label}</span>
                 </div>
@@ -413,14 +414,12 @@ function MobileNav({ pathname, role }) {
             <Link
               key={label}
               to={to}
-              className={`flex flex-col items-center gap-1 py-3 flex-1 transition-colors ${accent ? 'px-1' : ''}`}
-              style={{ color: isActive ? '#305CDE' : '#94a3b8' }}
+              className={`flex flex-col items-center gap-1 py-3 flex-1 transition-colors ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
             >
-              <div className={`flex flex-col rounded-full p-1.5 ${accent ? 'border-2 border-blue-600 bg-blue-50' : ''}`}>
-                <Icon className={`h-5 w-5 ${accent ? 'text-blue-600' : ''}`} />
-               
+              <div className="flex flex-col rounded-full p-1.5">
+                <Icon className="h-5 w-5" />
               </div>
-              <span className={`text-[10px] font-bold tracking-wider ${accent ? 'text-blue-600' : ''}`}>{label}</span>
+              <span className="text-[10px] font-bold tracking-wider">{label}</span>
             </Link>
           )
         })}

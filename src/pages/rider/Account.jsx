@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   User,
   CreditCard,
   LogOut,
   ArrowLeft,
+  Camera,
   ChevronRight,
   Pencil,
   Save,
@@ -19,6 +20,7 @@ import {
 import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { signOut, updateCurrentUser, useStore, VEHICLE_TYPES } from '@/lib/mock-store'
+import { readImageAsDataUrl } from '@/lib/image'
 
 const SECTIONS = [
   { id: 'profile', label: 'Profile', description: 'Name, email, and phone', Icon: User },
@@ -35,12 +37,36 @@ export default function RiderAccount() {
   const liveUser = useStore((s) => (s.session ? s.users.find((item) => item.id === s.session.userId) : null))
   const accountUser = liveUser ?? user
   const [activeSection, setActiveSection] = useState(null)
+  const [avatarError, setAvatarError] = useState('')
+  const avatarInputRef = useRef(null)
 
   if (!accountUser) return null
 
   const handleLogout = () => {
     signOut()
     navigate('/auth')
+  }
+
+  async function handleAvatarChange(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setAvatarError('Please choose an image file.')
+      return
+    }
+    try {
+      const dataUrl = await readImageAsDataUrl(file)
+      updateCurrentUser({ avatarUrl: dataUrl })
+      setAvatarError('')
+    } catch {
+      setAvatarError('Could not load that image. Try a different one.')
+    }
+  }
+
+  function handleAvatarRemove() {
+    updateCurrentUser({ avatarUrl: undefined })
+    setAvatarError('')
   }
 
   const handleBack = () => {
@@ -77,14 +103,36 @@ export default function RiderAccount() {
           <section className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-100 px-5 py-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-sm font-bold text-white">
-                  {accountUser.name.split(' ').map((name) => name[0]).join('').slice(0, 2).toUpperCase()}
+                <div className="relative h-12 w-12 shrink-0">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-brand text-white">
+                    {accountUser.avatarUrl ? (
+                      <img src={accountUser.avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <User className="h-6 w-6" />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    aria-label="Change profile photo"
+                    className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-brand text-white shadow-sm transition hover:bg-brand-hover"
+                  >
+                    <Camera className="h-2.5 w-2.5" />
+                  </button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-[#102A6B]">{accountUser.name}</p>
                   <p className="truncate text-xs text-slate-500">{accountUser.email}</p>
                 </div>
               </div>
+              {avatarError && <p className="mt-2 text-xs text-red-500">{avatarError}</p>}
             </div>
 
             <nav className="p-2">
@@ -137,7 +185,14 @@ export default function RiderAccount() {
               </button>
             </div>
 
-            {activeSection === 'profile' && <ProfilePanel user={accountUser} />}
+            {activeSection === 'profile' && (
+              <ProfilePanel
+                user={accountUser}
+                onAvatarChange={handleAvatarChange}
+                onAvatarRemove={handleAvatarRemove}
+                avatarError={avatarError}
+              />
+            )}
             {activeSection === 'payment' && <PaymentPanel user={accountUser} />}
           </section>
         )}
@@ -146,12 +201,13 @@ export default function RiderAccount() {
   )
 }
 
-function ProfilePanel({ user }) {
+function ProfilePanel({ user, onAvatarChange, onAvatarRemove, avatarError }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(user.name)
   const [email, setEmail] = useState(user.email)
   const [phone, setPhone] = useState(user.phone ?? '')
   const [notice, setNotice] = useState('')
+  const avatarInputRef = useRef(null)
 
   function saveProfile() {
     updateCurrentUser({
@@ -165,6 +221,47 @@ function ProfilePanel({ user }) {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-4 rounded-2xl border border-slate-200 p-5">
+        <div className="relative shrink-0">
+          <div className="flex h-28 w-24 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <User className="h-10 w-10 text-slate-300" />
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            aria-label="Change profile photo"
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-brand text-white shadow-sm transition hover:bg-brand-hover"
+          >
+            <Camera className="h-3.5 w-3.5" />
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onAvatarChange}
+          />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-[#102A6B]">Profile photo</p>
+          <p className="mt-1 text-sm text-slate-500">A clear passport-style photo helps customers and support recognize you.</p>
+          {user.avatarUrl && (
+            <button
+              type="button"
+              onClick={onAvatarRemove}
+              className="mt-2 text-xs font-semibold text-red-500 hover:underline"
+            >
+              Remove photo
+            </button>
+          )}
+          {avatarError && <p className="mt-2 text-xs text-red-500">{avatarError}</p>}
+        </div>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-blue-50 p-5">
         <div>
           <p className="text-sm font-bold text-[#102A6B]">Profile information</p>
