@@ -11,6 +11,12 @@ const CUSTOMER_LINKS = [
   { to: '/customer',         label: 'Dashboard', Icon: LayoutDashboard },
   { to: '/customer/book',    label: 'Book',      Icon: PackagePlus     },
   { to: '/customer/history', label: 'History',   Icon: History         },
+  { to: '/customer/account', label: 'Account',   Icon: User            },
+]
+
+const RIDER_LINKS = [
+  { to: '/rider',         label: 'Dashboard', Icon: LayoutDashboard },
+  { to: '/rider/account', label: 'Account',   Icon: User            },
 ]
 
 const NOTIFICATION_READ_KEY = 'dashpoint-notifications-read-at'
@@ -97,6 +103,9 @@ export function AppShell({ children }) {
     return items.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 6)
   }, [deliveries])
 
+  const role = session?.role
+  const homePath = role === 'rider' ? '/rider' : '/customer'
+  const navLinks = role === 'rider' ? RIDER_LINKS : CUSTOMER_LINKS
   const isDashboard = pathname === '/customer'
   const latestNotificationTime = notifications.reduce((latest, item) => Math.max(latest, Number(item.time) || 0), 0)
   const showNotificationDot = notifications.length > 0 && latestNotificationTime > notificationsReadAt
@@ -126,7 +135,7 @@ export function AppShell({ children }) {
     ${
       isDashboard
         ? 'min-h-[180px] sm:min-h-[180px] lg:min-h-[200px]'
-        : 'hidden md:flex h-16'
+        : 'hidden md:flex md:min-h-16'
     }
   `}
   style={{
@@ -297,10 +306,10 @@ export function AppShell({ children }) {
   {/* ── Desktop nav links ── */}
   {session && (
     <div className="hidden md:flex items-center gap-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full pb-3">
-      {CUSTOMER_LINKS.map(({ to, label, Icon }) => {
+      {navLinks.map(({ to, label, Icon }) => {
         const isActive =
-          to === '/customer'
-            ? pathname === '/customer'
+          to === homePath
+            ? pathname === homePath
             : pathname.startsWith(to)
 
         return (
@@ -342,7 +351,7 @@ export function AppShell({ children }) {
       {/* ── Page content ─────────────────────────────────────────── */}
       <div className="flex-1">{children}</div>
 
-      {session && <MobileNav pathname={pathname} />}
+      {session && <MobileNav pathname={pathname} role={role} />}
 
       <footer className="hidden md:flex border-t border-surface-200 bg-white px-4 sm:px-6 lg:px-8 py-4 text-xs text-slate-400 items-center justify-between max-w-7xl mx-auto w-full">
         <span>Workspace demo · frontend-only mock data</span>
@@ -358,9 +367,9 @@ export function AppShell({ children }) {
 }
 
 /* ── Mobile bottom nav ─────────────────────────────────────────── */
-function MobileNav({ pathname }) {
-    
-  const NAV_ITEMS = [
+function MobileNav({ pathname, role }) {
+
+  const CUSTOMER_NAV_ITEMS = [
     { to: '/customer',         label: 'Dashboard', Icon: LayoutDashboard },
         { to: '/customer/track',   label:'Track',    Icon: MapPin},
     { to: '/customer/book',    label: 'Send',      Icon: PackagePlus, accent: false, center:true },
@@ -368,14 +377,22 @@ function MobileNav({ pathname }) {
     { to: '/customer/account', label: 'Account',   Icon: User            },
   ]
 
+  const RIDER_NAV_ITEMS = [
+    { to: '/rider',         label: 'Dashboard', Icon: LayoutDashboard },
+    { to: '/rider/account', label: 'Account',   Icon: User            },
+  ]
+
+  const homePath = role === 'rider' ? '/rider' : '/customer'
+  const NAV_ITEMS = role === 'rider' ? RIDER_NAV_ITEMS : CUSTOMER_NAV_ITEMS
+
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-surface-200 shadow-[0_-4px_16px_rgba(0,0,0,0.07)]">
       <div className="flex items-end justify-around px-1">
         {NAV_ITEMS.map(({ to, label, Icon, center, accent }) => {
           const isActive =
-            to === '/customer'
-              ? pathname === '/customer'
-              : pathname.startsWith(to) && to !== '/customer'
+            to === homePath
+              ? pathname === homePath
+              : pathname.startsWith(to) && to !== homePath
 
           if (center) {
             return (

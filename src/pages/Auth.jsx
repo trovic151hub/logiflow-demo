@@ -16,15 +16,14 @@ import {
   Landmark,
   CreditCard,
 } from 'lucide-react'
-import { signIn, getCurrentUser, signUp } from '@/lib/mock-store'
-
-const VEHICLE_TYPES = ['Bike', 'Car', 'Van']
+import { signIn, getCurrentUser, signUp, updateCurrentUser, VEHICLE_TYPES } from '@/lib/mock-store'
 
 export default function Auth() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const role = state?.role === 'rider' ? 'rider' : 'customer'
-  const [tab, setTab] = useState('login')
+  const [tab, setTab] = useState(state?.role ? 'signup' : 'login')
+  const [signupStep, setSignupStep] = useState(1)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
 
@@ -45,14 +44,16 @@ export default function Auth() {
   const [accountNumber, setAccountNumber] = useState('')
 
   useEffect(() => {
+    if (state?.role) return // explicit CTA intent (e.g. "I'm a rider") wins over an existing session
     const user = getCurrentUser()
     if (user) {
-      navigate('/customer', { replace: true })
+      navigate(user.role === 'rider' ? '/rider' : '/customer', { replace: true })
     }
-  }, [navigate])
+  }, [navigate, state])
 
   function switchTab(t) {
     setTab(t)
+    setSignupStep(1)
     setError('')
     setShowPassword(false)
   }
@@ -65,47 +66,43 @@ export default function Auth() {
       setError('No account found with that email. Please sign up.')
       return
     }
-    navigate('/customer')
+    navigate(user.role === 'rider' ? '/rider' : '/customer')
   }
 
-  function handleSignUp(e) {
+  function handleGeneralSubmit(e) {
     e.preventDefault()
     setError('')
-    if (!name.trim() || !signupEmail.trim() || !signupPassword.trim()) {
+    if (!name.trim() || !signupEmail.trim() || !signupPassword.trim() || (role === 'rider' && !phone.trim())) {
       setError('Please fill in all required fields.')
       return
     }
 
-    let riderDetails
-    if (role === 'rider') {
-      if (
-        !vehicleType ||
-        !vehicleColor.trim() ||
-        !plateNumber.trim() ||
-        !licenseNumber.trim() ||
-        !nin.trim() ||
-        !bankName.trim() ||
-        !accountNumber.trim()
-      ) {
-        setError('Please fill in all required vehicle and verification fields.')
-        return
-      }
-      riderDetails = {
-        vehicleType,
-        vehicleColor: vehicleColor.trim(),
-        plateNumber: plateNumber.trim(),
-        licenseNumber: licenseNumber.trim(),
-        nin: nin.trim(),
-        bankName: bankName.trim(),
-        accountNumber: accountNumber.trim(),
-      }
+    const user = signUp(name.trim(), signupEmail.trim(), role, { phone: phone.trim() })
+    if (user.role === 'rider') {
+      setSignupStep(2)
+      return
     }
+    navigate('/customer', { replace: true })
+  }
 
-    const user = signUp(name.trim(), signupEmail.trim(), role, {
-      phone: phone.trim(),
-      ...riderDetails,
-    })
-    navigate(user.role === 'rider' ? '/rider' : '/customer', { replace: true })
+  function handlePaymentSubmit(e) {
+    e.preventDefault()
+    const details = {}
+    if (vehicleType) details.vehicleType = vehicleType
+    if (vehicleColor.trim()) details.vehicleColor = vehicleColor.trim()
+    if (plateNumber.trim()) details.plateNumber = plateNumber.trim()
+    if (licenseNumber.trim()) details.licenseNumber = licenseNumber.trim()
+    if (nin.trim()) details.nin = nin.trim()
+    if (bankName.trim()) details.bankName = bankName.trim()
+    if (accountNumber.trim()) details.accountNumber = accountNumber.trim()
+    if (Object.keys(details).length > 0) {
+      updateCurrentUser(details)
+    }
+    navigate('/rider', { replace: true })
+  }
+
+  function handleSkipPayment() {
+    navigate('/rider', { replace: true })
   }
 
   return (
@@ -125,29 +122,44 @@ export default function Auth() {
       <p className="mt-1 text-sm text-slate-500">Sign in or create an account to continue</p>
 
       <div className="mt-8 w-full max-w-sm rounded-2xl border border-surface-200 bg-white p-6 shadow-md">
-        <div className="flex rounded-full bg-surface-200 p-1">
-          <button
-            onClick={() => switchTab('login')}
-            className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors ${
-              tab === 'login' ? 'bg-brand text-white shadow-sm' : 'text-slate-600'
-            }`}
-          >
-            Login
-          </button>
-          <button
-            onClick={() => switchTab('signup')}
-            className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors ${
-              tab === 'signup' ? 'bg-brand text-white shadow-sm' : 'text-slate-600'
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+        {!(role === 'rider' && tab === 'signup' && signupStep === 2) && (
+          <>
+            <div className="flex rounded-full bg-surface-200 p-1">
+              <button
+                onClick={() => switchTab('login')}
+                className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors ${
+                  tab === 'login' ? 'bg-brand text-white shadow-sm' : 'text-slate-600'
+                }`}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => switchTab('signup')}
+                className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors ${
+                  tab === 'signup' ? 'bg-brand text-white shadow-sm' : 'text-slate-600'
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
 
-        {tab === 'signup' && (
-          <p className="mt-3 text-center text-xs text-slate-400">
-            Signing up as {role === 'rider' ? 'a rider' : 'a customer'}
-          </p>
+            {tab === 'signup' && (
+              <p className="mt-3 text-center text-xs text-slate-400">
+                Signing up as {role === 'rider' ? 'a rider' : 'a customer'}
+                {role === 'rider' && ' · Step 1 of 2'}
+              </p>
+            )}
+          </>
+        )}
+
+        {role === 'rider' && tab === 'signup' && signupStep === 2 && (
+          <div className="text-center">
+            <p className="text-xs font-bold uppercase tracking-wider text-brand">Step 2 of 2</p>
+            <h2 className="mt-1 text-sm font-bold text-navy">Payment & verification details</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Add these now, or skip and complete them later from your account settings.
+            </p>
+          </div>
         )}
 
         {error && (
@@ -208,8 +220,129 @@ export default function Auth() {
               Login
             </button>
           </form>
+        ) : role === 'rider' && signupStep === 2 ? (
+          <form onSubmit={handlePaymentSubmit} className="mt-5 flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-700">Vehicle type</label>
+              <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                <Car className="h-4 w-4 shrink-0 text-slate-400" />
+                <select
+                  value={vehicleType}
+                  onChange={(e) => setVehicleType(e.target.value)}
+                  className="flex-1 bg-transparent text-sm outline-none text-slate-700"
+                >
+                  <option value="" disabled>
+                    Select vehicle type
+                  </option>
+                  {VEHICLE_TYPES.map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-700">Vehicle color</label>
+              <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                <Palette className="h-4 w-4 shrink-0 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="e.g. Black"
+                  value={vehicleColor}
+                  onChange={(e) => setVehicleColor(e.target.value)}
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-700">Plate number</label>
+              <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                <Hash className="h-4 w-4 shrink-0 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="e.g. LND-234-KJ"
+                  value={plateNumber}
+                  onChange={(e) => setPlateNumber(e.target.value)}
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-700">Driver&apos;s license number</label>
+              <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                <IdCard className="h-4 w-4 shrink-0 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="License number"
+                  value={licenseNumber}
+                  onChange={(e) => setLicenseNumber(e.target.value)}
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-700">NIN (National ID Number)</label>
+              <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                <Fingerprint className="h-4 w-4 shrink-0 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="11-digit NIN"
+                  value={nin}
+                  onChange={(e) => setNin(e.target.value)}
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-700">Bank name</label>
+              <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                <Landmark className="h-4 w-4 shrink-0 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="e.g. GTBank"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-700">Bank account number</label>
+              <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
+                <CreditCard className="h-4 w-4 shrink-0 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="10-digit account number"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="mt-1 w-full rounded-full bg-brand py-3.5 text-sm font-semibold text-white hover:bg-brand-hover transition-colors"
+            >
+              Save & finish
+            </button>
+            <button
+              type="button"
+              onClick={handleSkipPayment}
+              className="w-full rounded-full py-3 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+            >
+              Skip for now
+            </button>
+          </form>
         ) : (
-          <form onSubmit={handleSignUp} className="mt-5 flex flex-col gap-3">
+          <form onSubmit={handleGeneralSubmit} className="mt-5 flex flex-col gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-slate-700">Full name</label>
               <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
@@ -277,122 +410,11 @@ export default function Auth() {
               </div>
             </div>
 
-            {role === 'rider' && (
-              <>
-                <p className="mt-2 text-xs font-semibold text-slate-700">Vehicle & verification details</p>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-700">Vehicle type</label>
-                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
-                    <Car className="h-4 w-4 shrink-0 text-slate-400" />
-                    <select
-                      value={vehicleType}
-                      onChange={(e) => setVehicleType(e.target.value)}
-                      className="flex-1 bg-transparent text-sm outline-none text-slate-700"
-                    >
-                      <option value="" disabled>
-                        Select vehicle type
-                      </option>
-                      {VEHICLE_TYPES.map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-700">Vehicle color</label>
-                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
-                    <Palette className="h-4 w-4 shrink-0 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="e.g. Black"
-                      value={vehicleColor}
-                      onChange={(e) => setVehicleColor(e.target.value)}
-                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-700">Plate number</label>
-                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
-                    <Hash className="h-4 w-4 shrink-0 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="e.g. LND-234-KJ"
-                      value={plateNumber}
-                      onChange={(e) => setPlateNumber(e.target.value)}
-                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-700">Driver&apos;s license number</label>
-                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
-                    <IdCard className="h-4 w-4 shrink-0 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="License number"
-                      value={licenseNumber}
-                      onChange={(e) => setLicenseNumber(e.target.value)}
-                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-700">NIN (National ID Number)</label>
-                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
-                    <Fingerprint className="h-4 w-4 shrink-0 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="11-digit NIN"
-                      value={nin}
-                      onChange={(e) => setNin(e.target.value)}
-                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-700">Bank name</label>
-                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
-                    <Landmark className="h-4 w-4 shrink-0 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="e.g. GTBank"
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-700">Bank account number</label>
-                  <div className="flex items-center gap-3 rounded-full bg-surface-100 px-4 py-3">
-                    <CreditCard className="h-4 w-4 shrink-0 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="10-digit account number"
-                      value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value)}
-                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
             <button
               type="submit"
               className="mt-1 w-full rounded-full bg-brand py-3.5 text-sm font-semibold text-white hover:bg-brand-hover transition-colors"
             >
-              Create Account
+              {role === 'rider' ? 'Continue' : 'Create Account'}
             </button>
           </form>
         )}

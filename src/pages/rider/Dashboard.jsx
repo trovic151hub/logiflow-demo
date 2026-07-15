@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Package, Zap, Leaf, MapPin, Clock, Briefcase, Star, Trophy } from 'lucide-react'
+import { Package, Zap, Leaf, MapPin, Clock, Briefcase, Star, Trophy, AlertCircle, ChevronRight } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { useStore, updateDeliveryStatus, STATUS_LABEL } from '@/lib/mock-store'
@@ -31,6 +31,9 @@ export default function RiderDashboard() {
 
   if (!user) return null
 
+  const paymentIncomplete =
+    !user.vehicleType || !user.plateNumber || !user.licenseNumber || !user.nin || !user.bankName || !user.accountNumber
+
   function accept(id) {
     updateDeliveryStatus(id, 'accepted', user.id, user.name)
     navigate('/rider/job/' + id)
@@ -43,6 +46,22 @@ export default function RiderDashboard() {
   return (
     <AppShell>
       <main className="p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {paymentIncomplete && (
+          <Link
+            to="/rider/account"
+            className="lg:col-span-12 flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-800 transition hover:bg-amber-100"
+          >
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <div>
+                <p className="text-sm font-bold">Complete your payment & verification details</p>
+                <p className="text-xs text-amber-700">Add your vehicle, license, and bank details to start receiving payouts.</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          </Link>
+        )}
+
         <section className="lg:col-span-4 space-y-6">
           <div className="rounded-2xl border border-surface-200 bg-navy text-white p-6 shadow-lg">
             <p className="text-xs font-bold uppercase tracking-wider text-white/60">Today&apos;s earnings</p>

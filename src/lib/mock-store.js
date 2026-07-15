@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from 'react'
 const STORAGE_KEY = 'dashpoint-store-v1'
 const SESSION_KEY = 'dashpoint-session'
 
+export const VEHICLE_TYPES = ['Bike', 'Car', 'Van']
+
 const SEED_USERS = [
   { id: 'u-cust-1', name: 'Ada Lovelace', email: 'ada@demo.io', role: 'customer' },
   { id: 'u-cust-2', name: 'John Smith', email: 'john@demo.io', role: 'customer' },

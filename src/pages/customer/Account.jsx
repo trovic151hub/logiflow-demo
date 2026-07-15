@@ -140,24 +140,24 @@ export default function Account() {
           </section>
         ) : (
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="mb-6 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setActiveSection(null)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
                   aria-label="Back to account sections"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Account section</p>
                   <h2 className="mt-1 font-display text-xl font-bold text-[#102A6B]">{activeTitle}</h2>
                 </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition hover:bg-red-100"
+                className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition hover:bg-red-100"
               >
                 <LogOut className="h-4 w-4" /> Sign out
               </button>

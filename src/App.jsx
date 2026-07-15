@@ -13,6 +13,7 @@ import Account from './pages/customer/Account'
 import Help from './pages/customer/Help'
 import RiderDashboard from './pages/rider/Dashboard'
 import RiderJob from './pages/rider/Job'
+import RiderAccount from './pages/rider/Account'
 
 const queryClient = new QueryClient()
 
@@ -74,6 +75,7 @@ export default function App() {
           <Route path="/customer/help" element={<Help />} />
           <Route path="/rider" element={<RiderDashboard />} />
           <Route path="/rider/job/:id" element={<RiderJob />} />
+          <Route path="/rider/account" element={<RiderAccount />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
