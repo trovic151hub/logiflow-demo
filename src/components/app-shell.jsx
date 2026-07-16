@@ -165,18 +165,7 @@ export function AppShell({ children }) {
       {mounted && session && (
         <>
           {/* Help */}
-          <Link
-            to="/customer/help"
-            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors"
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              color: '#ffffff',
-            }}
-            aria-label="Help"
-          >
-            <HelpCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Help</span>
-          </Link>
+        
 
           {/* Notification bell */}
           <div className="relative">
@@ -226,7 +215,7 @@ export function AppShell({ children }) {
       )}
 
       {/* User avatar + dropdown */}
-      {/* {mounted && user && (
+      {mounted && user && (
         <div className="relative">
           <button
             onClick={() => setProfileOpen(!profileOpen)}
@@ -298,7 +287,7 @@ export function AppShell({ children }) {
             </div>
           )}
         </div>
-      )} */}
+      )}
     </div>
   </div>
 
@@ -372,8 +361,8 @@ function MobileNav({ pathname, role }) {
 
   const CUSTOMER_NAV_ITEMS = [
     { to: '/customer',         label: 'Dashboard', Icon: LayoutDashboard },
-        { to: '/customer/track',   label:'Track',    Icon: MapPin},
-    { to: '/customer/book',    label: 'Send',      Icon: PackagePlus, accent: false, center:true },
+        // { to: '/customer/track',   label:'Track',    Icon: MapPin},
+    // { to: '/customer/book',    label: 'Send',      Icon: PackagePlus, accent: false, center:true },
     { to: '/customer/history', label: 'History',   Icon: History         },
     { to: '/customer/account', label: 'Account',   Icon: User            },
   ]
