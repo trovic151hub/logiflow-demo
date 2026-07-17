@@ -1,11 +1,122 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { Phone, X, CheckCircle, ArrowLeft, ClipboardList, UserCheck, Package, Truck, Copy, MapPinned, LoaderCircle, MapPin, Search } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { DeliveryMap } from '@/components/delivery-map'
 import { TripCard } from '@/components/trip-card'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { useStore, advanceCourier, updateDeliveryStatus, STATUS_LABEL } from '@/lib/mock-store'
+
+// Sheet heights as vh — collapsed (just handle + status), half, full
+const SNAP_POINTS = [14, 52, 88]
+
+function DraggableSheet({ children, banner, initialSnapIndex = 1, onSnapChange }) {
+  const sheetRef = useRef(null)
+  const dragStateRef = useRef({ dragging: false, startY: 0, startHeight: 0, lastY: 0, lastT: 0, velocity: 0 })
+  const [snapIndex, setSnapIndex] = useState(initialSnapIndex)
+  const [heightVh, setHeightVh] = useState(SNAP_POINTS[initialSnapIndex])
+  const [isDragging, setIsDragging] = useState(false)
+
+  const vh = (v) => (window.innerHeight * v) / 100
+
+  const clampHeight = (px) => {
+    const min = vh(SNAP_POINTS[0])
+    const max = vh(SNAP_POINTS[SNAP_POINTS.length - 1])
+    return Math.min(max, Math.max(min, px))
+  }
+
+  const handlePointerDown = useCallback((e) => {
+    const startHeightPx = sheetRef.current?.getBoundingClientRect().height ?? vh(SNAP_POINTS[snapIndex])
+    dragStateRef.current = {
+      dragging: true,
+      startY: e.clientY,
+      startHeight: startHeightPx,
+      lastY: e.clientY,
+      lastT: performance.now(),
+      velocity: 0,
+    }
+    setIsDragging(true)
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }, [snapIndex])
+
+  const handlePointerMove = useCallback((e) => {
+    const state = dragStateRef.current
+    if (!state.dragging) return
+
+    const deltaY = e.clientY - state.startY
+    const nextHeightPx = clampHeight(state.startHeight - deltaY)
+
+    const now = performance.now()
+    const dt = now - state.lastT
+    if (dt > 0) state.velocity = (e.clientY - state.lastY) / dt // px/ms, +down
+    state.lastY = e.clientY
+    state.lastT = now
+
+    setHeightVh((nextHeightPx / window.innerHeight) * 100)
+  }, [])
+
+  const handlePointerUp = useCallback(() => {
+    const state = dragStateRef.current
+    if (!state.dragging) return
+    state.dragging = false
+    setIsDragging(false)
+
+    const currentHeightPx = clampHeight(vh(heightVh))
+    const FLING_THRESHOLD = 0.5 // px/ms
+
+    let targetIndex
+    if (Math.abs(state.velocity) > FLING_THRESHOLD) {
+      const direction = state.velocity > 0 ? -1 : 1 // flicking down collapses
+      targetIndex = Math.min(SNAP_POINTS.length - 1, Math.max(0, snapIndex + direction))
+    } else {
+      let closest = 0
+      let closestDist = Infinity
+      SNAP_POINTS.forEach((sp, i) => {
+        const dist = Math.abs(vh(sp) - currentHeightPx)
+        if (dist < closestDist) { closestDist = dist; closest = i }
+      })
+      targetIndex = closest
+    }
+
+    setSnapIndex(targetIndex)
+    setHeightVh(SNAP_POINTS[targetIndex])
+    onSnapChange?.(targetIndex)
+  }, [heightVh, snapIndex, onSnapChange])
+
+  useEffect(() => {
+    const onResize = () => setHeightVh(SNAP_POINTS[snapIndex])
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [snapIndex])
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-20 z-10 flex flex-col justify-end">
+      {banner && <div className="pointer-events-auto relative z-10 mx-4 mb-2">{banner}</div>}
+
+      <div
+        ref={sheetRef}
+        style={{
+          height: `${heightVh}vh`,
+          transition: isDragging ? 'none' : 'height 0.28s cubic-bezier(0.32, 0.72, 0, 1)',
+        }}
+        className="pointer-events-auto flex flex-col rounded-t-3xl bg-white shadow-2xl"
+      >
+        <div
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className="flex shrink-0 touch-none cursor-grab justify-center pt-3 pb-1 active:cursor-grabbing"
+        >
+          <div className="h-1 w-10 rounded-full bg-slate-300" />
+        </div>
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pb-6 pt-2">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function formatTime(ts) {
   if (!ts) return null
@@ -85,11 +196,15 @@ export default function Track() {
   if (!user) return null
 
   const handleBack = () => {
-    if (window.history.state && window.history.state.idx > 0) {
+     if(id){
+        navigate('/customer')
+    }
+    else if (window.history.state && window.history.state.idx > 0) {
       navigate(-1)
     } else {
       navigate('/customer')
     }
+   
   }
 
   if (!id) {
@@ -122,10 +237,17 @@ export default function Track() {
     return (
       <AppShell>
         <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          <button
+            type="button"
+            onClick={handleBack}
+            aria-label="Go back"
+            className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
           <div className="mb-6 flex flex-col gap-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em]  text-center text-slate-400">Track hub</p>
-            <h1 className="text-2xl text-center font-bold text-slate-900">Track a delivery</h1>
-           <p className="text-sm  text-center text-slate-500">Enter a tracking code or open any order to view its live status and route.</p>
+            <h1 className="text-2xl text-left sm:text-left font-bold text-slate-900">Track </h1>
+            <p className="text-sm  text-left text-slate-500">Track a delivery to receive package</p>
           </div>
 
           <form onSubmit={handleTrackLookup} className="mb-6 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex sm:items-center sm:gap-3">
@@ -167,14 +289,13 @@ export default function Track() {
 
           <div className="space-y-3">
             {orderedDeliveries.length === 0 ? (
-               <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-              <MapPin className="h-6 w-6" />
-            </div>
-            <h2 className="mt-4 text-lg font-semibold text-slate-900">No activity yet</h2>
-
-            <p className="mt-2 text-sm text-slate-500">Your shipment updates will appear here once a booking is created.</p>
-          </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                  <MapPin className="h-6 w-6" />
+                </div>
+                <h2 className="mt-4 text-lg font-semibold text-slate-900">No activity yet</h2>
+                <p className="mt-2 text-sm text-slate-500">Your shipment updates will appear here once a booking is created.</p>
+              </div>
             ) : (
               displayedDeliveries.map((item) => (
                 <TripCard key={item.id} delivery={item} actionTo={`/customer/track/${item.id}`} />
@@ -366,7 +487,7 @@ export default function Track() {
 
   return (
     <AppShell>
-      {/* ── Mobile: full-bleed map with a docked bottom sheet ── */}
+      {/* ── Mobile: full-bleed map with a draggable bottom sheet ── */}
       <div className="lg:hidden">
         <div className="fixed inset-0 z-0">
           <DeliveryMap
@@ -389,19 +510,14 @@ export default function Track() {
           {livePill}
         </div>
 
-        {banner && <div className="relative z-10 mx-4">{banner}</div>}
-
-        <div className="fixed inset-x-0 bottom-20 z-10 max-h-[62vh] overflow-y-auto rounded-t-3xl bg-white shadow-2xl">
-          <div className="flex justify-center pt-3 pb-1">
-            <div className="h-1 w-10 rounded-full bg-slate-300" />
-          </div>
-          <div className="space-y-4 px-4 pb-6 pt-2">
-            <DetailPanel />
-          </div>
-        </div>
+        {/* NOTE: banner is rendered INSIDE DraggableSheet (above the handle) — do not
+            also render it here, or it will appear twice. */}
+        <DraggableSheet banner={banner} initialSnapIndex={1}>
+          <DetailPanel />
+        </DraggableSheet>
       </div>
 
-      {/* ── Desktop: side-by-side grid ── */}
+      {/* ── Desktop: side-by-side grid (no drag — real layout space, not a floating sheet) ── */}
       <main className="hidden px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto lg:block">
         <button
           type="button"

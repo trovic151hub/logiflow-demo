@@ -76,16 +76,16 @@ export default function History() {
           <ArrowLeft className="h-4 w-4" />
         </button>
 
-        <div className="text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">History</p>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900">Delivery history</h1>
+        <div className="text-center flex flex-col items-start gap-1 sm:flex-row sm:items-center">
+          <h1 className="font-display text-left text-3xl font-bold tracking-tight text-slate-900">Delivery history</h1>
+          <p className="text-sm  text-left text-slate-500">click delivery log to view details</p>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3 sm:gap-4">
+        {/* <div className="mt-6 flex flex-wrap gap-3 sm:gap-4">
           <StatCard icon={Package} label="Pending" value={pending.length} tone="text-orange-600 bg-orange-500/10" />
           <StatCard icon={Clock} label="In progress" value={active.length} tone="text-blue-600 bg-blue-50" />
           <StatCard icon={CheckCircle} label="Completed" value={completed.length} tone="text-emerald-600 bg-emerald-500/10" />
-        </div>
+        </div> */}
 
         <section className="mt-6 space-y-3">
           {deliveries.length === 0 ? (
@@ -102,14 +102,13 @@ export default function History() {
             </div>
           ) : (
             sortedDeliveries.map((delivery) => (
-              <button
-                key={delivery.id}
-                type="button"
-                onClick={() => openInvoice(delivery)}
-                className="w-full text-left"
-              >
-                <TripCard delivery={delivery} />
-              </button>
+              // TripCard owns its own click here — pass onClick directly instead of
+              // wrapping it in a <button>. Nesting a <button> around TripCard's own
+              // clickable root fired BOTH handlers on every click (inner navigate,
+              // then outer openInvoice), which is why the modal opened and then
+              // immediately routed away. Passing onClick makes TripCard skip its
+              // internal navigate() and hand the click fully to this parent instead.
+              <TripCard key={delivery.id} delivery={delivery} onClick={openInvoice} />
             ))
           )}
         </section>

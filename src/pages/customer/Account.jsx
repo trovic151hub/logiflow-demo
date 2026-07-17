@@ -1,5 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useRef, useState } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
 import {
   User,
   LogOut,
@@ -19,6 +19,7 @@ import {
   Clock,
   Pencil,
   Save,
+  Lock,
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { BottomSheet } from '@/components/bottom-sheet'
@@ -37,17 +38,32 @@ const SECTIONS = [
 export default function Account() {
   const user = useRequireAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const liveUser = useStore((s) => (s.session ? s.users.find((item) => item.id === s.session.userId) : null))
   const accountUser = liveUser ?? user
   const [activeSection, setActiveSection] = useState(null)
   const [activeModal, setActiveModal] = useState(null)
-  const [email, setEmail] = useState(accountUser?.email ?? '')
   const [password, setPassword] = useState('')
   const [preferences, setPreferences] = useState({ email: true, sms: true, marketing: false })
   const [savedNotice, setSavedNotice] = useState('')
   const [avatarError, setAvatarError] = useState('')
+  // Set when we arrived here via the AppShell name/email click, so ProfilePanel
+  // knows to open straight into editing mode instead of the read-only view.
+  const [startProfileEditing, setStartProfileEditing] = useState(false)
   const avatarInputRef = useRef(null)
   const deliveries = useStore((s) => (accountUser ? s.deliveries.filter((d) => d.customerId === accountUser.id) : []))
+
+  // AppShell's name/email button navigates here with state.openEditProfile —
+  // jump straight into the Profile section, already in editing mode.
+  useEffect(() => {
+    if (location.state?.openEditProfile) {
+      setActiveSection('profile')
+      setStartProfileEditing(true)
+      // Clear the flag from history state so refreshing or coming back later
+      // doesn't force editing mode again.
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state, location.pathname, navigate])
 
   if (!accountUser) return null
 
@@ -110,17 +126,27 @@ export default function Account() {
 
   const activeTitle = SECTIONS.find((section) => section.id === activeSection)?.label ?? 'Account'
 
+  // The top browser-back arrow only belongs on the Account main hub. Once
+  // you're inside a section (Profile, Settings, ...) or a modal is open,
+  // hide it — each of those already has its own way back (PageHeader's
+  // onBack, or closing the sheet), so a second "back" arrow up top is
+  // confusing and, per the request, shouldn't reappear until you're back
+  // on the main Account list.
+  const showTopBackArrow = !activeSection && !activeModal
+
   return (
     <AppShell>
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        <button
-          type="button"
-          onClick={handleBack}
-          aria-label="Go back"
-          className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+        {showTopBackArrow && (
+          <button
+            type="button"
+            onClick={handleBack}
+            aria-label="Go back"
+            className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+        )}
 
         {!activeSection && (
           <div className="mb-6">
@@ -157,10 +183,17 @@ export default function Account() {
                     onChange={handleAvatarChange}
                   />
                 </div>
-                <div className="min-w-0">
+                {/* Was onClick={ProfilePanel} — passed the component function itself as
+                    a handler, which calls its hooks outside of render and throws.
+                    Fixed to just switch into the Profile section like the nav buttons below. */}
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('profile')}
+                  className="min-w-0 flex-1 text-left"
+                >
                   <p className="truncate text-sm font-bold text-slate-900">{accountUser.name}</p>
                   <p className="truncate text-xs text-slate-500">{accountUser.email}</p>
-                </div>
+                </button>
               </div>
               {avatarError && <p className="mt-2 text-xs text-red-500">{avatarError}</p>}
             </div>
@@ -210,7 +243,7 @@ export default function Account() {
                 totalOrders={totalOrders}
                 deliveredOrders={deliveredOrders}
                 activeOrders={activeOrders}
-                totalSpent={totalSpent}
+                startEditing={startProfileEditing}
                 onAvatarChange={handleAvatarChange}
                 onAvatarRemove={handleAvatarRemove}
                 avatarError={avatarError}
@@ -237,14 +270,14 @@ export default function Account() {
       <BottomSheet
         open={!!activeModal}
         onOpenChange={(value) => { if (!value) closeModal() }}
-        title={activeModal === 'password' ? 'Change password' : activeModal === 'email' ? 'Update email' : 'Notification preferences'}
-        description={activeModal === 'password' ? 'Set a new password for your account.' : activeModal === 'email' ? 'Use a new email address for updates.' : 'Choose how you want alerts delivered.'}
+        title={activeModal === 'password' ? 'Change password' : 'Notification preferences'}
+        description={activeModal === 'password' ? 'Set a new password for your account.' : 'Choose how you want alerts delivered.'}
         footer={
           <button
             onClick={closeModal}
             className="w-full rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
           >
-            {activeModal === 'password' ? 'Save password' : activeModal === 'email' ? 'Save email' : 'Confirm'}
+            {activeModal === 'password' ? 'Save password' : 'Confirm'}
           </button>
         }
       >
@@ -254,14 +287,6 @@ export default function Account() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Enter new password"
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-600"
-          />
-        ) : activeModal === 'email' ? (
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Enter new email"
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-600"
           />
         ) : (
@@ -281,16 +306,23 @@ export default function Account() {
   )
 }
 
-function ProfilePanel({ user, totalOrders, deliveredOrders, activeOrders, totalSpent, onAvatarChange, onAvatarRemove, avatarError }) {
-  const [editing, setEditing] = useState(false)
+function ProfilePanel({ user, totalOrders, deliveredOrders, activeOrders, startEditing = false, onAvatarChange, onAvatarRemove, avatarError }) {
+  const [editing, setEditing] = useState(startEditing)
   const [name, setName] = useState(user.name)
-  const [email, setEmail] = useState(user.email)
   const [newPassword, setNewPassword] = useState('')
   const [notice, setNotice] = useState('')
   const avatarInputRef = useRef(null)
 
+  // If the parent flips startEditing after this component already mounted
+  // (arriving via the AppShell shortcut on an already-open Account page),
+  // pick that up too.
+  useEffect(() => {
+    if (startEditing) setEditing(true)
+  }, [startEditing])
+
   function saveProfile() {
-    updateCurrentUser({ name: name.trim() || user.name, email: email.trim() || user.email })
+    // Email intentionally excluded — it's locked and not sent in the update.
+    updateCurrentUser({ name: name.trim() || user.name })
     setNewPassword('')
     setEditing(false)
     setNotice(newPassword ? 'Profile updated. Password captured for this demo.' : 'Profile updated.')
@@ -342,7 +374,7 @@ function ProfilePanel({ user, totalOrders, deliveredOrders, activeOrders, totalS
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-blue-50 p-5">
         <div>
           <p className="text-sm font-bold text-slate-900">Profile information</p>
-          <p className="mt-1 text-sm text-slate-500">Edit your account name, email, and password directly here.</p>
+          <p className="mt-1 text-sm text-slate-500">Edit your account name and password directly here.</p>
         </div>
         <button
           type="button"
@@ -366,7 +398,9 @@ function ProfilePanel({ user, totalOrders, deliveredOrders, activeOrders, totalS
       {editing ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <EditableField label="Full name" value={name} onChange={setName} />
-          <EditableField label="Email" type="email" value={email} onChange={setEmail} />
+          {/* Email is locked everywhere — shown as read-only even in editing mode,
+              with a note pointing to support instead of an editable input. */}
+          <LockedField label="Email" value={user.email} note="Contact support to change your email." />
           <EditableField label="New password" type="password" value={newPassword} onChange={setNewPassword} placeholder="Enter new password" />
           <InfoItem label="Account type" value="Customer" />
         </div>
@@ -387,7 +421,6 @@ function ProfilePanel({ user, totalOrders, deliveredOrders, activeOrders, totalS
           <StatCard label="Total orders" value={totalOrders} />
           <StatCard label="Delivered" value={deliveredOrders} tone="text-emerald-600" />
           <StatCard label="Active" value={activeOrders} tone="text-orange-500" />
-          <StatCard label="Total spent" value={`NGN ${totalSpent.toLocaleString()}`} />
         </div>
       </div>
     </div>
@@ -399,7 +432,8 @@ function SettingsPanel({ preferences, setPreferences, savedNotice, savePreferenc
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-3">
         <ActionButton icon={Shield} title="Change Password" text="Update security" onClick={() => openModal('password')} />
-        <ActionButton icon={Mail} title="Update Email" text="Change email address" onClick={() => openModal('email')} />
+        {/* Update Email removed from the reachable actions — email is locked account-wide. */}
+        <ActionButton icon={Mail} title="Email" text="Contact support to change" disabled />
         <ActionButton icon={Bell} title="Notifications" text="Manage alerts" onClick={() => openModal('notifications')} />
       </div>
 
@@ -484,6 +518,23 @@ function EditableField({ label, value, onChange, type = 'text', placeholder }) {
   )
 }
 
+// Read-only counterpart to EditableField, used for the email field so it
+// visually matches the other fields in the editing grid but can't be typed
+// into or submitted.
+function LockedField({ label, value, note }) {
+  return (
+    <div className="block rounded-xl bg-slate-50 px-4 py-3">
+      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+        <Lock className="h-3 w-3" /> {label}
+      </span>
+      <p className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-500">
+        {value}
+      </p>
+      {note && <p className="mt-1.5 text-[11px] text-slate-400">{note}</p>}
+    </div>
+  )
+}
+
 function InfoItem({ label, value }) {
   return (
     <div className="rounded-xl bg-slate-50 px-4 py-3">
@@ -502,9 +553,17 @@ function StatCard({ label, value, tone = 'text-blue-600' }) {
   )
 }
 
-function ActionButton({ icon: Icon, title, text, onClick }) {
+function ActionButton({ icon: Icon, title, text, onClick, disabled = false }) {
   return (
-    <button onClick={onClick} className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:bg-slate-50">
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition ${
+        disabled
+          ? 'cursor-not-allowed border-slate-100 bg-slate-50 opacity-60'
+          : 'border-slate-200 hover:bg-slate-50'
+      }`}
+    >
       <Icon className="h-5 w-5 text-slate-400" />
       <span className="min-w-0">
         <span className="block text-sm font-semibold text-slate-700">{title}</span>

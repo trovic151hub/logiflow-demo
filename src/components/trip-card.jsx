@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { STATUS_LABEL } from '@/lib/mock-store'
@@ -13,8 +13,10 @@ const STATUS_VARIANT = {
   cancelled: 'muted',
 }
 
-export function TripCard({ delivery, actionLabel, actionTo, onAction, className }) {
+export function TripCard({ delivery, actionLabel, actionTo, onAction, onBeforeNavigate, onClick, className }) {
   const d = delivery
+  const navigate = useNavigate()
+
   const isDelivered = d.status === 'delivered'
   const label = actionLabel ?? (isDelivered ? 'Completed' : 'Track')
   const actionClassName = cn(
@@ -24,8 +26,45 @@ export function TripCard({ delivery, actionLabel, actionTo, onAction, className 
       : 'bg-blue-600 text-white hover:bg-blue-500',
   )
 
+  // Where the whole card goes when clicked — falls back to trackingId, then id,
+  // so this still works for cards that don't pass an explicit actionTo.
+  const trackTo = actionTo ?? `/customer/track/${d.trackingId ?? d.id}`
+
+  function handleCardClick() {
+    // If a parent passes its own onClick (e.g. History.jsx opening a details
+    // modal), that parent owns the click entirely — don't also navigate, or
+    // you get "modal opens, then immediately routes away" as both fire.
+    if (onClick) {
+      onClick(d)
+      return
+    }
+    onBeforeNavigate?.()
+    navigate(trackTo)
+  }
+
+  // Stop the inner action from also triggering the card's own onClick —
+  // this is the "Link inside a clickable wrapper" double-nav issue.
+  function handleActionClick(e) {
+    e.stopPropagation()
+    onAction?.(e)
+  }
+
   return (
-    <div className={cn('rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-200', className)}>
+    <div
+      onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleCardClick()
+        }
+      }}
+      className={cn(
+        'cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-200',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-bold text-slate-900">{d.id}</p>
         <Badge variant={STATUS_VARIANT[d.status] ?? 'muted'}>{STATUS_LABEL[d.status] ?? d.status}</Badge>
@@ -55,12 +94,22 @@ export function TripCard({ delivery, actionLabel, actionTo, onAction, className 
           {d.price != null && <span className="font-semibold text-slate-700">₦{d.price}</span>}
         </div>
 
+        {/* Inner action is optional now — the whole card already navigates on click.
+            If you keep passing actionTo/onAction, this stays as a secondary explicit
+            button but no longer double-fires navigation. */}
         {actionTo ? (
-          <Link to={actionTo} className={actionClassName}>
+          <Link
+            to={actionTo}
+            onClick={(e) => {
+              e.stopPropagation()
+              onBeforeNavigate?.()
+            }}
+            className={actionClassName}
+          >
             {label}
           </Link>
         ) : onAction ? (
-          <button type="button" onClick={onAction} className={actionClassName}>
+          <button type="button" onClick={handleActionClick} className={actionClassName}>
             {label}
           </button>
         ) : null}

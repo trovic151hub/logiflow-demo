@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import {
   LayoutDashboard, PackagePlus, History, Bell, User, LogOut,
-  HelpCircle, ChevronDown,MapPin
+  HelpCircle, ChevronDown,MapPin,PackageSearch 
 } from 'lucide-react'
 import { getCurrentUser, signOut, useStore, resetDemo } from '@/lib/mock-store'
 
@@ -255,14 +255,15 @@ export function AppShell({ children }) {
 
           {profileOpen && (
             <div className="absolute right-0 top-full z-[1400] mt-2 w-48 rounded-xl border border-surface-200 bg-white shadow-lg">
-              <div className="px-4 py-3 border-b border-surface-200">
-                <p className="text-sm font-bold text-navy">
+              <Link
+                to="/customer/account" className="px-4 py-3 border-b border-surface-200">
+                <p className="text-sm px-4  font-bold text-navy">
                   {user.name}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs px-4  text-slate-500">
                   {user.email}
                 </p>
-              </div>
+              </Link>
 
               <Link
                 to="/customer/account"
@@ -271,6 +272,14 @@ export function AppShell({ children }) {
               >
                 <User className="h-4 w-4 text-slate-500" />
                 <span>Manage Account</span>
+              </Link>
+               <Link
+                to="/customer/help"
+                onClick={() => setProfileOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-100 transition-colors"
+              >
+                <HelpCircle className="h-4 w-4 text-slate-500" />
+                <span>Help</span>
               </Link>
 
               <button
@@ -361,8 +370,8 @@ function MobileNav({ pathname, role }) {
 
   const CUSTOMER_NAV_ITEMS = [
     { to: '/customer',         label: 'Dashboard', Icon: LayoutDashboard },
-        // { to: '/customer/track',   label:'Track',    Icon: MapPin},
-    // { to: '/customer/book',    label: 'Send',      Icon: PackagePlus, accent: false, center:true },
+        { to: '/customer/track',   label:'Receive',    Icon: PackageSearch},
+    { to: '/customer/book',    label: 'Send',      Icon: PackagePlus, accent: false, center:true },
     { to: '/customer/history', label: 'History',   Icon: History         },
     { to: '/customer/account', label: 'Account',   Icon: User            },
   ]

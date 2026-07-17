@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Drawer as DrawerPrimitive } from 'vaul'
-
+import { Title } from '@radix-ui/react-dialog'
 import { cn } from '@/lib/utils'
 
 const Drawer = ({ shouldScaleBackground = true, ...props }) => (
@@ -32,8 +32,11 @@ const DrawerContent = React.forwardRef(({ className, children, ...props }, ref) 
       )}
       {...props}
     >
+       
       <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+      
       {children}
+      
     </DrawerPrimitive.Content>
   </DrawerPortal>
 ))

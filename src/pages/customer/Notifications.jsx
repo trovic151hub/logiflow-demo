@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { Bell, Clock3, PackageCheck, Truck } from 'lucide-react'
-import { AppShell } from '@/components/app-shell'
+import { Bell, Clock3, PackageCheck, Truck, ArrowLeft } from 'lucide-react'
+import { AppShell} from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { useStore } from '@/lib/mock-store'
 
@@ -26,6 +26,7 @@ function dayGroup(value) {
 }
 
 export default function NotificationsPage() {
+  const navigate= useNavigate()
   const user = useRequireAuth()
   const [readAt, setReadAt] = useState(() => {
     if (typeof window === 'undefined') return 0
@@ -100,10 +101,24 @@ export default function NotificationsPage() {
     setReadAt(nextReadAt)
     window.dispatchEvent(new Event('dashpoint:notifications-read'))
   }
-
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/customer')
+    }
+  }
   return (
     <AppShell>
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+         <button
+            type="button"
+            onClick={handleBack}
+            aria-label="Go back"
+            className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Notifications</p>

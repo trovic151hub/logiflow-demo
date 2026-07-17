@@ -307,7 +307,7 @@ export default function CustomerDashboard() {
                 </span>
               )}
             </p>
-            <Link to="/customer/track" className="text-xs font-bold text-blue-600 hover:underline">
+            <Link to="/customer/history" className="text-xs font-bold text-blue-600 hover:underline">
               View all →
             </Link>
           </div>
