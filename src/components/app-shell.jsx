@@ -165,7 +165,7 @@ export function AppShell({ children }) {
     <div className="flex items-center gap-2 sm:gap-3">
       {mounted && session && (
         <>
-          {/* Help */}
+          {/* Help
           <Link
             to="/customer/help"
             className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors"
@@ -177,7 +177,7 @@ export function AppShell({ children }) {
           >
             <HelpCircle className="h-4 w-4" />
             <span className="hidden sm:inline">Help</span>
-          </Link>
+          </Link> */}
 
           {/* Notification bell */}
           <div className="relative">
@@ -227,88 +227,88 @@ export function AppShell({ children }) {
       )}
 
       {/* User avatar + dropdown */}
-      {/* {mounted && user && (
-        <div className="relative">
-          <button
-            onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors"
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-            }}
-          >
-            <div
-              className="h-7 w-7 rounded-full flex items-center justify-center shrink-0"
-              style={{
-                background: 'rgba(255,255,255,0.25)',
-              }}
-            >
-              <span
-                className="text-xs font-bold"
-                style={{ color: '#ffffff' }}
-              >
-                {initials}
-              </span>
-            </div>
-
-            <span
-              className="text-sm font-semibold hidden sm:inline"
-              style={{ color: '#ffffff' }}
-            >
-              Hi, {user.name.split(' ')[0]}
-            </span>
-
-            <ChevronDown
-              className="h-3.5 w-3.5"
-              style={{
-                color: 'rgba(255,255,255,0.7)',
-              }}
-            />
-          </button>
-
-          {profileOpen && (
-            <div className="absolute right-0 top-full z-[1400] mt-2 w-48 rounded-xl border border-surface-200 bg-white shadow-lg">
-              <Link
-                to="/customer/account" className="px-4 py-3 border-b border-surface-200">
-                <p className="text-sm px-4  font-bold text-navy">
-                  {user.name}
-                </p>
-                <p className="text-xs px-4  text-slate-500">
-                  {user.email}
-                </p>
-              </Link>
-
-              <Link
-                to="/customer/account"
-                onClick={() => setProfileOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-100 transition-colors"
-              >
-                <User className="h-4 w-4 text-slate-500" />
-                <span>Manage Account</span>
-              </Link>
-               <Link
-                to="/customer/help"
-                onClick={() => setProfileOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-100 transition-colors"
-              >
-                <HelpCircle className="h-4 w-4 text-slate-500" />
-                <span>Help</span>
-              </Link>
-
+          {mounted && user && (
+            <div className="relative">
               <button
-                onClick={() => {
-                  signOut()
-                  navigate('/auth')
-                  setProfileOpen(false)
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors"
+                style={{
+                  background: 'rgba(255,255,255,0.15)',
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-surface-200"
               >
-                <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
+                <div
+                  className="h-7 w-7 rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    background: 'rgba(255,255,255,0.25)',
+                  }}
+                >
+                  <span
+                    className="text-xs font-bold"
+                    style={{ color: '#ffffff' }}
+                  >
+                    {initials}
+                  </span>
+                </div>
+    
+                <span
+                  className="text-sm font-semibold hidden sm:inline"
+                  style={{ color: '#ffffff' }}
+                >
+                  Hi, {user.name.split(' ')[0]}
+                </span>
+    
+                <ChevronDown
+                  className="h-3.5 w-3.5"
+                  style={{
+                    color: 'rgba(255,255,255,0.7)',
+                  }}
+                />
               </button>
+    
+              {profileOpen && (
+                <div className="absolute right-0 top-full z-[1400] mt-2 w-48 rounded-xl border border-surface-200 bg-white shadow-lg">
+                  <Link
+                    to="/customer/account" className="px-4 py-3 border-b border-surface-200">
+                    <p className="text-sm px-4  font-bold text-navy">
+                      {user.name}
+                    </p>
+                    <p className="text-xs px-4  text-slate-500">
+                      {user.email}
+                    </p>
+                  </Link>
+    
+                  <Link
+                    to="/customer/account"
+                    onClick={() => setProfileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-100 transition-colors"
+                  >
+                    <User className="h-4 w-4 text-slate-500" />
+                    <span>Manage Account</span>
+                  </Link>
+                   <Link
+                    to="/customer/help"
+                    onClick={() => setProfileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-100 transition-colors"
+                  >
+                    <HelpCircle className="h-4 w-4 text-slate-500" />
+                    <span>Help</span>
+                  </Link>
+    
+                  <button
+                    onClick={() => {
+                      signOut()
+                      navigate('/auth')
+                      setProfileOpen(false)
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-surface-200"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )} */}
     </div>
   </div>
 
