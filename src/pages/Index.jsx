@@ -25,7 +25,7 @@ export default function LogisticsLanding() {
               />
             </div>
 
-            <span className="font-outfit font-bold text-sm sm:text-lg lg:text-xl text-white truncate">
+            <span className="font-display font-bold text-sm sm:text-lg lg:text-xl text-white truncate">
               WorkPlace Logistics
             </span>
           </div>
@@ -140,7 +140,7 @@ pt-28 sm:pt-32 lg:pt-36 w-full"
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1 }}
               className="
-font-outfit
+font-display
 text-[2.2rem]
 leading-[1.08]
 
@@ -229,24 +229,24 @@ w-full sm:w-auto"
         </motion.div>
       </section>
 
-      {/* Stats/Logos Section - Light */}
-      <section className="py-12 border-b border-slate-200 bg-white relative z-10">
-        <div
-          className="max-w-7xl mx-auto px-6 sm:px-10 flex justify-between
-gap-6
-text-center items-center gap-8 opacity-40 grayscale"
-        >
-          <div className="text-base sm:text-xl font-black font-outfit tracking-tighter text-slate-800">
-            REAL<span className="font-light">TIME</span>
+      {/* Trust Stats Section */}
+      <section className="py-12 sm:py-16 border-b border-slate-200 bg-white relative z-10">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-6 text-center">
+          <div>
+            <p className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900">50,000+</p>
+            <p className="mt-1 text-[11px] sm:text-sm font-semibold uppercase tracking-wider text-slate-500">Deliveries completed</p>
           </div>
-          <div className="hidden md:flex text-base sm:text-xl font-black font-outfit tracking-tighter text-slate-800">
-            SMART<span className="font-light">LOGISTICS</span>
+          <div>
+            <p className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900">1,248+</p>
+            <p className="mt-1 text-[11px] sm:text-sm font-semibold uppercase tracking-wider text-slate-500">Active riders</p>
           </div>
-          <div className="text-base sm:text-xl font-black font-outfit tracking-tighter text-slate-800">
-            FAST<span className="font-light">DELIVERY</span>
+          <div>
+            <p className="font-display text-2xl sm:text-4xl font-extrabold text-blue-600">14 min</p>
+            <p className="mt-1 text-[11px] sm:text-sm font-semibold uppercase tracking-wider text-slate-500">Average ETA</p>
           </div>
-          <div className=" hidden md:flex text-base sm:text-xl font-black font-outfit tracking-tighter text-slate-800">
-            ACTIVE<span className="font-light">SUPPORT</span>
+          <div>
+            <p className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900">4.9★</p>
+            <p className="mt-1 text-[11px] sm:text-sm font-semibold uppercase tracking-wider text-slate-500">Average rating</p>
           </div>
         </div>
       </section>
@@ -264,7 +264,7 @@ text-center items-center gap-8 opacity-40 grayscale"
               <h2
                 className="text-3xl
 sm:text-4xl
-lg:text-5xl font-bold font-outfit mb-6 text-slate-900 leading-tight"
+lg:text-5xl font-bold font-display mb-6 text-slate-900 leading-tight"
               >
                 From warehouse to doorstep, perfectly tracked.
               </h2>
@@ -393,7 +393,7 @@ lg:text-5xl font-bold font-outfit mb-6 text-slate-900 leading-tight"
               <h2
                 className="text-3xl
 sm:text-4xl
-lg:text-5xl font-bold font-outfit leading-tight text-slate-900"
+lg:text-5xl font-bold font-display leading-tight text-slate-900"
               >
                 Command center for your entire operation.
               </h2>
@@ -440,7 +440,7 @@ lg:text-5xl font-bold font-outfit leading-tight text-slate-900"
         <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-[600px] h-[600px] bg-cyan-400 rounded-full blur-[80px] pointer-events-none mix-blend-screen"></div>
          */}
         <div className="max-w-3xl mx-auto space-y-8 relative z-10">
-          <h2 className="text-4xl sm:text-5xl font-bold font-outfit text-white">
+          <h2 className="text-4xl sm:text-5xl font-bold font-display text-white">
             Ready to move faster?
           </h2>
           <p className="text-blue-100 text-lg">
@@ -472,7 +472,7 @@ function FeatureCard({ icon, title, desc, delay }) {
       <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-6">
         {icon}
       </div>
-      <h3 className="text-xl font-bold font-outfit mb-3 text-slate-900">{title}</h3>
+      <h3 className="text-xl font-bold font-display mb-3 text-slate-900">{title}</h3>
       <p className="text-slate-600 leading-relaxed">{desc}</p>
     </motion.div>
   );

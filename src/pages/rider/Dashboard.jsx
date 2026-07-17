@@ -1,20 +1,15 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Package, Zap, Leaf, MapPin, Clock, Briefcase, Star, Trophy, AlertCircle, ChevronRight } from 'lucide-react'
+import { Briefcase, Star, Trophy, AlertCircle, ChevronRight } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
+import { TripCard } from '@/components/trip-card'
 import { useRequireAuth } from '@/lib/use-require-auth'
-import { useStore, updateDeliveryStatus, STATUS_LABEL } from '@/lib/mock-store'
+import { useStore, updateDeliveryStatus } from '@/lib/mock-store'
 
 function getGreeting() {
   const h = new Date().getHours()
   if (h < 12) return 'Good morning'
   if (h < 17) return 'Good afternoon'
   return 'Good evening'
-}
-
-function PackageIcon({ type }) {
-  if (type === 'Express') return <Zap className="h-3.5 w-3.5 text-brand" />
-  if (type === 'Cargo') return <Package className="h-3.5 w-3.5 text-orange-400" />
-  return <Leaf className="h-3.5 w-3.5 text-green-500" />
 }
 
 export default function RiderDashboard() {
@@ -63,10 +58,10 @@ export default function RiderDashboard() {
         )}
 
         <section className="lg:col-span-4 space-y-6">
-          <div className="rounded-2xl border border-surface-200 bg-navy text-white p-6 shadow-lg">
+          <div className="rounded-2xl border border-surface-200 bg-slate-900 text-white p-6 shadow-lg">
             <p className="text-xs font-bold uppercase tracking-wider text-white/60">Today&apos;s earnings</p>
             <p className="mt-1 font-display text-4xl font-bold">₦{todayEarnings}</p>
-            <p className="mt-2 text-xs text-success font-medium">+ {completed.length} deliveries completed</p>
+            <p className="mt-2 text-xs text-emerald-400 font-medium">+ {completed.length} deliveries completed</p>
           </div>
 
           <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm space-y-4">
@@ -94,24 +89,13 @@ export default function RiderDashboard() {
           </div>
 
           {myJobs.length > 0 && (
-            <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm">
-              <h3 className="font-display text-sm font-bold uppercase tracking-wider mb-4">Your active jobs</h3>
-              <ul className="space-y-3">
+            <div>
+              <h3 className="font-display text-sm font-bold uppercase tracking-wider mb-4 px-1">Your active jobs</h3>
+              <div className="space-y-3">
                 {myJobs.map((d) => (
-                  <li key={d.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-bold">{d.id}</p>
-                      <p className="text-xs text-slate-500">{STATUS_LABEL[d.status]}</p>
-                    </div>
-                    <Link
-                      to={'/rider/job/' + d.id}
-                      className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-hover"
-                    >
-                      Open
-                    </Link>
-                  </li>
+                  <TripCard key={d.id} delivery={d} actionLabel="Open" actionTo={'/rider/job/' + d.id} />
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </section>
@@ -128,7 +112,7 @@ export default function RiderDashboard() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <div className="size-2 rounded-full bg-success animate-pulse" />
+                <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-600">Online</span>
               </div>
             </div>
@@ -136,48 +120,16 @@ export default function RiderDashboard() {
             {incoming.length === 0 ? (
               <p className="text-center text-slate-500 py-12">No incoming requests right now.</p>
             ) : (
-              <ul className="space-y-4">
+              <div className="space-y-4">
                 {incoming.map((d) => (
-                  <li
+                  <TripCard
                     key={d.id}
-                    className="rounded-xl border border-surface-200 p-4 hover:border-brand transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <PackageIcon type={d.packageType} />
-                          <span className="text-xs font-bold">{d.packageType}</span>
-                          <span className="text-xs text-slate-400 flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />{d.distanceKm} km
-                          </span>
-                        </div>
-                        <p className="mt-2 text-sm font-bold">{d.id}</p>
-                        <p className="text-xs text-slate-500">{d.pickup.address} → {d.dropoff.address}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-display text-xl font-bold text-brand">₦{d.price}</p>
-                        <p className="text-[10px] text-slate-400 flex items-center justify-end gap-1">
-                          <Clock className="h-3 w-3" />{d.etaMinutes}m
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => reject(d.id)}
-                        className="px-4 py-2 rounded-lg border border-surface-200 text-xs font-bold text-slate-500 hover:bg-surface-100"
-                      >
-                        Reject
-                      </button>
-                      <button
-                        onClick={() => accept(d.id)}
-                        className="flex-1 rounded-lg bg-navy py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-brand"
-                      >
-                        Accept job
-                      </button>
-                    </div>
-                  </li>
+                    delivery={d}
+                    onAction={() => accept(d.id)}
+                    onSecondary={() => reject(d.id)}
+                  />
                 ))}
-              </ul>
+              </div>
             )}
           </div>
         </section>

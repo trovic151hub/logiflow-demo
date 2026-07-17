@@ -13,10 +13,19 @@ const STATUS_VARIANT = {
   cancelled: 'muted',
 }
 
-export function TripCard({ delivery, actionLabel, actionTo, onAction, className }) {
+export function TripCard({
+  delivery,
+  actionLabel,
+  actionTo,
+  onAction,
+  secondaryLabel,
+  onSecondary,
+  className,
+}) {
   const d = delivery
   const isDelivered = d.status === 'delivered'
-  const label = actionLabel ?? (isDelivered ? 'Completed' : 'Track')
+  const hasDualAction = onSecondary != null
+  const label = actionLabel ?? (hasDualAction ? 'Accept job' : isDelivered ? 'Completed' : 'Track')
   const actionClassName = cn(
     'shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors',
     isDelivered
@@ -43,7 +52,7 @@ export function TripCard({ delivery, actionLabel, actionTo, onAction, className 
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+      <div className={cn('mt-3 border-t border-slate-100 pt-3', hasDualAction ? 'space-y-3' : 'flex items-center justify-between gap-3')}>
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
           {d.etaMinutes != null && (
             <span className="flex items-center gap-1">
@@ -55,7 +64,24 @@ export function TripCard({ delivery, actionLabel, actionTo, onAction, className 
           {d.price != null && <span className="font-semibold text-slate-700">₦{d.price}</span>}
         </div>
 
-        {actionTo ? (
+        {hasDualAction ? (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onSecondary}
+              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-50"
+            >
+              {secondaryLabel ?? 'Reject'}
+            </button>
+            <button
+              type="button"
+              onClick={onAction}
+              className="flex-1 rounded-full bg-blue-600 py-2 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-blue-500"
+            >
+              {label}
+            </button>
+          </div>
+        ) : actionTo ? (
           <Link to={actionTo} className={actionClassName}>
             {label}
           </Link>

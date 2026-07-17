@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import {
   LayoutDashboard, PackagePlus, History, Bell, User, LogOut,
-  HelpCircle, ChevronDown,MapPin
+  HelpCircle, ChevronDown, MapPin, Wallet,
 } from 'lucide-react'
 import { getCurrentUser, signOut, useStore, resetDemo } from '@/lib/mock-store'
 
@@ -15,8 +15,9 @@ const CUSTOMER_LINKS = [
 ]
 
 const RIDER_LINKS = [
-  { to: '/rider',         label: 'Dashboard', Icon: LayoutDashboard },
-  { to: '/rider/account', label: 'Account',   Icon: User            },
+  { to: '/rider',          label: 'Dashboard', Icon: LayoutDashboard },
+  { to: '/rider/earnings', label: 'Earnings',  Icon: Wallet          },
+  { to: '/rider/account',  label: 'Account',   Icon: User            },
 ]
 
 const NOTIFICATION_READ_KEY = 'dashpoint-notifications-read-at'
@@ -379,8 +380,9 @@ function MobileNav({ pathname, role }) {
   ]
 
   const RIDER_NAV_ITEMS = [
-    { to: '/rider',         label: 'Dashboard', Icon: LayoutDashboard },
-    { to: '/rider/account', label: 'Account',   Icon: User            },
+    { to: '/rider',          label: 'Dashboard', Icon: LayoutDashboard },
+    { to: '/rider/earnings', label: 'Earnings',  Icon: Wallet          },
+    { to: '/rider/account',  label: 'Account',   Icon: User            },
   ]
 
   const homePath = role === 'rider' ? '/rider' : '/customer'
