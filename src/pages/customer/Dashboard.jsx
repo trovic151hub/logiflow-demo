@@ -277,7 +277,7 @@ export default function CustomerDashboard() {
               
                 <div className="relative flex h-full flex-col justify-between gap-5">
                   <div className='flex w-full justify-center items-center'>
-                    <span className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm">
+                    <span className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl ">
                     <img src={image} alt="" className="h-full w-full  object-cover" />
                   </span>
                   </div>
