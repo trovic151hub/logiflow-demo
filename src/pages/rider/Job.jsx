@@ -83,13 +83,13 @@ export default function RiderJob() {
             <div className="mt-6 space-y-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-brand" /> Pickup
+                  <MapPin className="h-3 w-3 text-blue-600" /> Pickup
                 </p>
                 <p className="mt-0.5 text-sm font-medium">{delivery.pickup.address}</p>
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-success" /> Dropoff
+                  <MapPin className="h-3 w-3 text-emerald-600" /> Dropoff
                 </p>
                 <p className="mt-0.5 text-sm font-medium">{delivery.dropoff.address}</p>
               </div>
@@ -105,7 +105,7 @@ export default function RiderJob() {
           <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Current status</p>
-              <span className="rounded-full bg-brand/10 px-3 py-1 text-[10px] font-bold uppercase text-brand">
+              <span className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-bold uppercase text-blue-600">
                 {STATUS_LABEL[delivery.status]}
               </span>
             </div>
@@ -116,16 +116,16 @@ export default function RiderJob() {
                   updateDeliveryStatus(id, nextStep.next)
                   if (nextStep.next === 'in_transit') setAutoMove(true)
                 }}
-                className="w-full rounded-xl bg-brand py-3 font-bold text-white shadow-lg shadow-brand/20 hover:bg-brand-hover"
+                className="w-full rounded-xl bg-blue-600 py-3 font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500"
               >
                 {nextStep.label}
               </button>
             ) : delivery.status === 'delivered' ? (
               <div>
-                <p className="text-sm text-success font-bold">✓ Delivered successfully</p>
+                <p className="text-sm text-emerald-600 font-bold">✓ Delivered successfully</p>
                 <button
                   onClick={() => navigate('/rider')}
-                  className="mt-4 w-full rounded-xl bg-navy py-3 font-bold text-white hover:bg-brand"
+                  className="mt-4 w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-blue-600"
                 >
                   Back to dashboard
                 </button>

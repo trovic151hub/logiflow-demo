@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import {
   LayoutDashboard, PackagePlus, History, Bell, User, LogOut,
-  HelpCircle, ChevronDown,MapPin,PackageSearch 
+  HelpCircle, ChevronDown,MapPin,PackageSearch , Wallet,
 } from 'lucide-react'
 import { getCurrentUser, signOut, useStore, resetDemo } from '@/lib/mock-store'
 
@@ -15,8 +15,9 @@ const CUSTOMER_LINKS = [
 ]
 
 const RIDER_LINKS = [
-  { to: '/rider',         label: 'Dashboard', Icon: LayoutDashboard },
-  { to: '/rider/account', label: 'Account',   Icon: User            },
+  { to: '/rider',          label: 'Dashboard', Icon: LayoutDashboard },
+  { to: '/rider/earnings', label: 'Earnings',  Icon: Wallet          },
+  { to: '/rider/account',  label: 'Account',   Icon: User            },
 ]
 
 const NOTIFICATION_READ_KEY = 'dashpoint-notifications-read-at'
@@ -165,7 +166,18 @@ export function AppShell({ children }) {
       {mounted && session && (
         <>
           {/* Help */}
-        
+          <Link
+            to="/customer/help"
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors"
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              color: '#ffffff',
+            }}
+            aria-label="Help"
+          >
+            <HelpCircle className="h-4 w-4" />
+            <span className="hidden sm:inline">Help</span>
+          </Link>
 
           {/* Notification bell */}
           <div className="relative">
@@ -215,7 +227,7 @@ export function AppShell({ children }) {
       )}
 
       {/* User avatar + dropdown */}
-      {mounted && user && (
+      {/* {mounted && user && (
         <div className="relative">
           <button
             onClick={() => setProfileOpen(!profileOpen)}
@@ -296,7 +308,7 @@ export function AppShell({ children }) {
             </div>
           )}
         </div>
-      )}
+      )} */}
     </div>
   </div>
 
@@ -377,8 +389,9 @@ function MobileNav({ pathname, role }) {
   ]
 
   const RIDER_NAV_ITEMS = [
-    { to: '/rider',         label: 'Dashboard', Icon: LayoutDashboard },
-    { to: '/rider/account', label: 'Account',   Icon: User            },
+    { to: '/rider',          label: 'Dashboard', Icon: LayoutDashboard },
+    { to: '/rider/earnings', label: 'Earnings',  Icon: Wallet          },
+    { to: '/rider/account',  label: 'Account',   Icon: User            },
   ]
 
   const homePath = role === 'rider' ? '/rider' : '/customer'

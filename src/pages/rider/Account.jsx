@@ -16,8 +16,15 @@ import {
   Fingerprint,
   Landmark,
   AlertCircle,
+  Settings,
+  Shield,
+  Mail,
+  Bell,
+  Check,
 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
+import { BottomSheet } from '@/components/bottom-sheet'
+import { PageHeader } from '@/components/page-header'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { signOut, updateCurrentUser, useStore, VEHICLE_TYPES } from '@/lib/mock-store'
 import { readImageAsDataUrl } from '@/lib/image'
@@ -25,6 +32,7 @@ import { readImageAsDataUrl } from '@/lib/image'
 const SECTIONS = [
   { id: 'profile', label: 'Profile', description: 'Name, email, and phone', Icon: User },
   { id: 'payment', label: 'Payment & verification', description: 'Vehicle, license, and bank details', Icon: CreditCard },
+  { id: 'settings', label: 'Settings', description: 'Security and notification preferences', Icon: Settings },
 ]
 
 function isPaymentIncomplete(user) {
@@ -39,12 +47,31 @@ export default function RiderAccount() {
   const [activeSection, setActiveSection] = useState(null)
   const [avatarError, setAvatarError] = useState('')
   const avatarInputRef = useRef(null)
+  const [activeModal, setActiveModal] = useState(null)
+  const [email, setEmail] = useState(accountUser?.email ?? '')
+  const [password, setPassword] = useState('')
+  const [preferences, setPreferences] = useState({ email: true, sms: true, marketing: false })
+  const [savedNotice, setSavedNotice] = useState('')
 
   if (!accountUser) return null
 
   const handleLogout = () => {
     signOut()
     navigate('/auth')
+  }
+
+  const openModal = (type) => {
+    setActiveModal(type)
+    setSavedNotice('')
+  }
+
+  const closeModal = () => {
+    setActiveModal(null)
+    setSavedNotice('')
+  }
+
+  const savePreferences = () => {
+    setSavedNotice('Preferences updated successfully.')
   }
 
   async function handleAvatarChange(event) {
@@ -94,7 +121,7 @@ export default function RiderAccount() {
 
         {!activeSection && (
           <div className="mb-6">
-            <h1 className="font-display text-3xl font-bold tracking-tight text-[#102A6B]">Account</h1>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900">Account</h1>
             <p className="mt-2 text-sm text-slate-500">Profile and payment & verification details.</p>
           </div>
         )}
@@ -104,7 +131,7 @@ export default function RiderAccount() {
             <div className="border-b border-slate-100 px-5 py-5">
               <div className="flex items-center gap-3">
                 <div className="relative h-12 w-12 shrink-0">
-                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-brand text-white">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-blue-600 text-white">
                     {accountUser.avatarUrl ? (
                       <img src={accountUser.avatarUrl} alt="" className="h-full w-full object-cover" />
                     ) : (
@@ -115,7 +142,7 @@ export default function RiderAccount() {
                     type="button"
                     onClick={() => avatarInputRef.current?.click()}
                     aria-label="Change profile photo"
-                    className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-brand text-white shadow-sm transition hover:bg-brand-hover"
+                    className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-sm transition hover:bg-blue-500"
                   >
                     <Camera className="h-2.5 w-2.5" />
                   </button>
@@ -128,7 +155,7 @@ export default function RiderAccount() {
                   />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-[#102A6B]">{accountUser.name}</p>
+                  <p className="truncate text-sm font-bold text-slate-900">{accountUser.name}</p>
                   <p className="truncate text-xs text-slate-500">{accountUser.email}</p>
                 </div>
               </div>
@@ -141,7 +168,7 @@ export default function RiderAccount() {
                   key={id}
                   type="button"
                   onClick={() => setActiveSection(id)}
-                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-slate-700 transition hover:bg-blue-50 hover:text-brand"
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-slate-700 transition hover:bg-blue-50 hover:text-blue-600"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
                     <Icon className="h-5 w-5" />
@@ -158,32 +185,28 @@ export default function RiderAccount() {
                   <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
                 </button>
               ))}
+
+              <div className="mt-2 border-t border-slate-100 pt-2">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-red-600 transition hover:bg-red-50"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50">
+                    <LogOut className="h-5 w-5" />
+                  </span>
+                  <span className="text-sm font-bold">Sign out</span>
+                </button>
+              </div>
             </nav>
           </section>
         ) : (
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setActiveSection(null)}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
-                  aria-label="Back to account sections"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Account section</p>
-                  <h2 className="mt-1 font-display text-xl font-bold text-[#102A6B]">{activeTitle}</h2>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition hover:bg-red-100"
-              >
-                <LogOut className="h-4 w-4" /> Sign out
-              </button>
-            </div>
+            <PageHeader
+              title={activeTitle}
+              subtitle="Account section"
+              onBack={() => setActiveSection(null)}
+            />
 
             {activeSection === 'profile' && (
               <ProfilePanel
@@ -194,9 +217,62 @@ export default function RiderAccount() {
               />
             )}
             {activeSection === 'payment' && <PaymentPanel user={accountUser} />}
+            {activeSection === 'settings' && (
+              <SettingsPanel
+                preferences={preferences}
+                setPreferences={setPreferences}
+                savedNotice={savedNotice}
+                savePreferences={savePreferences}
+                openModal={openModal}
+              />
+            )}
           </section>
         )}
       </main>
+
+      <BottomSheet
+        open={!!activeModal}
+        onOpenChange={(value) => { if (!value) closeModal() }}
+        title={activeModal === 'password' ? 'Change password' : activeModal === 'email' ? 'Update email' : 'Notification preferences'}
+        description={activeModal === 'password' ? 'Set a new password for your account.' : activeModal === 'email' ? 'Use a new email address for updates.' : 'Choose how you want alerts delivered.'}
+        footer={
+          <button
+            onClick={closeModal}
+            className="w-full rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
+          >
+            {activeModal === 'password' ? 'Save password' : activeModal === 'email' ? 'Save email' : 'Confirm'}
+          </button>
+        }
+      >
+        {activeModal === 'password' ? (
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Enter new password"
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-600"
+          />
+        ) : activeModal === 'email' ? (
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Enter new email"
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-600"
+          />
+        ) : (
+          <div className="space-y-4">
+            <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+              <input type="checkbox" checked={preferences.email} onChange={() => setPreferences((prev) => ({ ...prev, email: !prev.email }))} className="h-4 w-4 rounded text-blue-600" />
+              <span className="text-sm text-slate-700">Email pushes</span>
+            </label>
+            <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+              <input type="checkbox" checked={preferences.sms} onChange={() => setPreferences((prev) => ({ ...prev, sms: !prev.sms }))} className="h-4 w-4 rounded text-blue-600" />
+              <span className="text-sm text-slate-700">SMS updates</span>
+            </label>
+          </div>
+        )}
+      </BottomSheet>
     </AppShell>
   )
 }
@@ -234,7 +310,7 @@ function ProfilePanel({ user, onAvatarChange, onAvatarRemove, avatarError }) {
             type="button"
             onClick={() => avatarInputRef.current?.click()}
             aria-label="Change profile photo"
-            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-brand text-white shadow-sm transition hover:bg-brand-hover"
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-sm transition hover:bg-blue-500"
           >
             <Camera className="h-3.5 w-3.5" />
           </button>
@@ -247,7 +323,7 @@ function ProfilePanel({ user, onAvatarChange, onAvatarRemove, avatarError }) {
           />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-bold text-[#102A6B]">Profile photo</p>
+          <p className="text-sm font-bold text-slate-900">Profile photo</p>
           <p className="mt-1 text-sm text-slate-500">A clear passport-style photo helps customers and support recognize you.</p>
           {user.avatarUrl && (
             <button
@@ -264,7 +340,7 @@ function ProfilePanel({ user, onAvatarChange, onAvatarRemove, avatarError }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-blue-50 p-5">
         <div>
-          <p className="text-sm font-bold text-[#102A6B]">Profile information</p>
+          <p className="text-sm font-bold text-slate-900">Profile information</p>
           <p className="mt-1 text-sm text-slate-500">Edit your account name, email, and phone number.</p>
         </div>
         <button
@@ -277,7 +353,7 @@ function ProfilePanel({ user, onAvatarChange, onAvatarRemove, avatarError }) {
               setNotice('')
             }
           }}
-          className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-hover"
+          className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
         >
           {editing ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
           {editing ? 'Save changes' : 'Edit profile'}
@@ -343,7 +419,7 @@ function PaymentPanel({ user }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-blue-50 p-5">
         <div>
-          <p className="text-sm font-bold text-[#102A6B]">Payment & verification</p>
+          <p className="text-sm font-bold text-slate-900">Payment & verification</p>
           <p className="mt-1 text-sm text-slate-500">Your vehicle, license, and bank details.</p>
         </div>
         <button
@@ -356,7 +432,7 @@ function PaymentPanel({ user }) {
               setNotice('')
             }
           }}
-          className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-hover"
+          className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
         >
           {editing ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
           {editing ? 'Save changes' : 'Edit details'}
@@ -374,7 +450,7 @@ function PaymentPanel({ user }) {
             <select
               value={vehicleType}
               onChange={(e) => setVehicleType(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-[#102A6B] outline-none transition focus:border-brand"
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-600"
             >
               <option value="" disabled>
                 Select vehicle type
@@ -408,6 +484,54 @@ function PaymentPanel({ user }) {
   )
 }
 
+function SettingsPanel({ preferences, setPreferences, savedNotice, savePreferences, openModal }) {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <ActionButton icon={Shield} title="Change Password" text="Update security" onClick={() => openModal('password')} />
+        <ActionButton icon={Mail} title="Update Email" text="Change email address" onClick={() => openModal('email')} />
+        <ActionButton icon={Bell} title="Notifications" text="Manage alerts" onClick={() => openModal('notifications')} />
+      </div>
+
+      {savedNotice && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{savedNotice}</div>}
+
+      <div className="space-y-3">
+        <PreferenceRow title="Job alerts" text="Get notified about nearby delivery requests" checked={preferences.email} onChange={() => setPreferences((prev) => ({ ...prev, email: !prev.email }))} />
+        <PreferenceRow title="SMS updates" text="Receive text messages for job status changes" checked={preferences.sms} onChange={() => setPreferences((prev) => ({ ...prev, sms: !prev.sms }))} />
+        <PreferenceRow title="Marketing emails" text="Receive special offers and promotions" checked={preferences.marketing} onChange={() => setPreferences((prev) => ({ ...prev, marketing: !prev.marketing }))} />
+      </div>
+
+      <button onClick={savePreferences} className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500">
+        <Check className="h-4 w-4" /> Confirm preferences
+      </button>
+    </div>
+  )
+}
+
+function ActionButton({ icon: Icon, title, text, onClick }) {
+  return (
+    <button onClick={onClick} className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:bg-slate-50">
+      <Icon className="h-5 w-5 text-slate-400" />
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-slate-700">{title}</span>
+        <span className="block truncate text-xs text-slate-500">{text}</span>
+      </span>
+    </button>
+  )
+}
+
+function PreferenceRow({ title, text, checked, onChange }) {
+  return (
+    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-4 transition hover:bg-slate-50">
+      <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 rounded text-blue-600" />
+      <span>
+        <span className="block text-sm font-semibold text-slate-700">{title}</span>
+        <span className="block text-xs text-slate-500">{text}</span>
+      </span>
+    </label>
+  )
+}
+
 function EditableField({ label, value, onChange, type = 'text', placeholder, Icon }) {
   return (
     <label className="block rounded-xl bg-slate-50 px-4 py-3">
@@ -419,7 +543,7 @@ function EditableField({ label, value, onChange, type = 'text', placeholder, Ico
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-[#102A6B] outline-none transition focus:border-brand"
+        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-600"
       />
     </label>
   )

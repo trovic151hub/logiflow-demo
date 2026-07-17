@@ -1,24 +1,15 @@
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Wallet, Package, TrendingUp } from 'lucide-react'
-import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
+import { Wallet, Package, TrendingUp } from 'lucide-react'
+import { AppShell } from '@/components/app-shell'
+import { PageHeader } from '@/components/page-header'
 import { useStore } from '@/lib/mock-store'
 
 export default function Earnings() {
   const user = useRequireAuth('rider')
-  const navigate = useNavigate()
   const completed = useStore((s) =>
     user ? s.deliveries.filter((d) => d.riderId === user.id && d.status === 'delivered') : [],
   )
   if (!user) return null
-
-  const handleBack = () => {
-    if (window.history.state && window.history.state.idx > 0) {
-      navigate(-1)
-    } else {
-      navigate('/rider')
-    }
-  }
 
   const total = completed.reduce((a, d) => a + d.price, 0)
   const avg = completed.length ? Math.round(total / completed.length) : 0
@@ -26,19 +17,9 @@ export default function Earnings() {
   return (
     <AppShell>
       <main className="p-6 max-w-6xl mx-auto">
-        <button
-          type="button"
-          onClick={handleBack}
-          aria-label="Go back"
-          className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
+        <PageHeader title="Earnings" subtitle="Your completed deliveries and payouts." />
 
-        <h1 className="font-display text-3xl font-bold">Earnings</h1>
-        <p className="mt-2 text-sm text-slate-500">Your completed deliveries and payouts.</p>
-
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard label="Total earned" value={`₦${total}`} sub="all time" highlight Icon={Wallet} />
           <StatCard label="Deliveries" value={`${completed.length}`} sub="completed" Icon={Package} />
           <StatCard label="Avg per trip" value={`₦${avg}`} sub="payout" Icon={TrendingUp} />
@@ -61,7 +42,7 @@ export default function Earnings() {
                     <td className="px-4 sm:px-6 py-4 font-bold">{d.id}</td>
                     <td className="hidden sm:table-cell px-6 py-4 text-slate-600 max-w-xs truncate">{d.pickup.address} → {d.dropoff.address}</td>
                     <td className="hidden sm:table-cell px-6 py-4 text-slate-600">{d.distanceKm} km</td>
-                    <td className="px-4 sm:px-6 py-4 text-right font-bold text-success">+₦{d.price}</td>
+                    <td className="px-4 sm:px-6 py-4 text-right font-bold text-emerald-600">+₦{d.price}</td>
                   </tr>
                 ))}
                 {completed.length === 0 && (
@@ -84,7 +65,7 @@ function StatCard({ label, value, sub, highlight, Icon }) {
   return (
     <div
       className={`rounded-2xl p-6 shadow-sm border ${
-        highlight ? 'bg-navy text-white border-navy' : 'bg-white border-surface-200'
+        highlight ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-surface-200'
       }`}
     >
       <div className="flex items-center justify-between mb-1">
