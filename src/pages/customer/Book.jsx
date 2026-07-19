@@ -616,6 +616,7 @@ export default function Book() {
   /* ── Step progress bar ── */
   function StepBar() {
     return (
+    
       <div className="mb-8 flex items-center">
         {STEPS.map((label, idx) => {
           const done   = step > idx
@@ -877,14 +878,17 @@ export default function Book() {
       <main className="min-h-screen px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-8">
         <div className="mx-auto max-w-6xl">
           {/* Back button */}
-          {/* <button
+          <div className='flex gap-3 items-center mb-5'>
+            <button
             type="button"
             onClick={handleBack}
             aria-label="Go back"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4" />
-          </button> */}
+          </button>
+           <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900">Route</h1>
+          </div>
 
           {/* Page grid */}
           <div className="grid gap-5 lg:grid-cols-[1fr_360px]">

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import {
   LayoutDashboard, PackagePlus, History, Bell, User, LogOut,
@@ -23,6 +23,7 @@ const RIDER_LINKS = [
 const NOTIFICATION_READ_KEY = 'dashpoint-notifications-read-at'
 
 export function AppShell({ children }) {
+  const profileRef= useRef(null)
   const navigate   = useNavigate()
   const session    = useStore((s) => s.session)
   const [mounted, setMounted]       = useState(false)
@@ -34,6 +35,17 @@ export function AppShell({ children }) {
   })
   const { pathname } = useLocation()
 
+useEffect(() => {
+    const handleClickOutside = (e) => {
+      // If the menu is open AND the click was outside the profile element, close it
+      if (profileOpen && profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [profileOpen]); // Re-run when state changes so we have the fresh value
   useEffect(() => setMounted(true), [])
 
   useEffect(() => {
@@ -228,7 +240,7 @@ export function AppShell({ children }) {
 
       {/* User avatar + dropdown */}
           {mounted && user && (
-            <div className="relative">
+            <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
                 className="flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors"
