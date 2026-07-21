@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getCurrentUser } from './mock-store'
 
-export function useRequireAuth() {
+export function useRequireAuth(requiredRole) {
   const navigate = useNavigate()
   const [user, setUser] = useState(() => getCurrentUser())
   useEffect(() => {
@@ -11,7 +11,11 @@ export function useRequireAuth() {
       navigate('/auth', { replace: true })
       return
     }
+    if (requiredRole && u.role !== requiredRole) {
+      navigate(u.role === 'rider' ? '/rider' : '/customer', { replace: true })
+      return
+    }
     setUser(u)
-  }, [navigate])
+  }, [navigate, requiredRole])
   return user
 }

@@ -66,6 +66,7 @@ export default function Auth() {
       setError('No account found with that email. Please sign up.')
       return
     }
+    // Always redirect by the user's actual stored role — not the CTA role
     navigate(user.role === 'rider' ? '/rider' : '/customer')
   }
 
@@ -114,7 +115,7 @@ export default function Auth() {
       <div className="mb-5 flex items-center justify-center">
         <img
           src="/logo.png"
-          alt="Workspace Logistics & Courier Logo"
+          alt="Workspace Logistics &amp; Courier Logo"
           className="h-20 w-auto object-contain"
         />
       </div>
@@ -122,6 +123,7 @@ export default function Auth() {
       <p className="mt-1 text-sm text-slate-500">Sign in or create an account to continue</p>
 
       <div className="mt-8 w-full max-w-sm rounded-2xl border border-surface-200 bg-white p-6 shadow-md">
+        {/* Tab switcher — hidden on rider step 2 */}
         {!(role === 'rider' && tab === 'signup' && signupStep === 2) && (
           <>
             <div className="flex rounded-full bg-surface-200 p-1">
@@ -143,6 +145,7 @@ export default function Auth() {
               </button>
             </div>
 
+            {/* Role label — only shown on signup tab */}
             {tab === 'signup' && (
               <p className="mt-3 text-center text-xs text-slate-400">
                 Signing up as {role === 'rider' ? 'a rider' : 'a customer'}
@@ -155,7 +158,7 @@ export default function Auth() {
         {role === 'rider' && tab === 'signup' && signupStep === 2 && (
           <div className="text-center">
             <p className="text-xs font-bold uppercase tracking-wider text-brand">Step 2 of 2</p>
-            <h2 className="mt-1 text-sm font-bold text-navy">Payment & verification details</h2>
+            <h2 className="mt-1 text-sm font-bold text-navy">Payment &amp; verification details</h2>
             <p className="mt-1 text-xs text-slate-500">
               Add these now, or skip and complete them later from your account settings.
             </p>
@@ -331,7 +334,7 @@ export default function Auth() {
               type="submit"
               className="mt-1 w-full rounded-full bg-brand py-3.5 text-sm font-semibold text-white hover:bg-brand-hover transition-colors"
             >
-              Save & finish
+              Save &amp; finish
             </button>
             <button
               type="button"

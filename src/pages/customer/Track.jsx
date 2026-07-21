@@ -5,7 +5,7 @@ import { AppShell } from '@/components/app-shell'
 import { DeliveryMap } from '@/components/delivery-map'
 import { TripCard } from '@/components/trip-card'
 import { useRequireAuth } from '@/lib/use-require-auth'
-import { useStore, advanceCourier, updateDeliveryStatus, STATUS_LABEL } from '@/lib/mock-store'
+import { useStore, updateDeliveryStatus, STATUS_LABEL } from '@/lib/mock-store'
 
 // Sheet heights as vh — collapsed (just handle + status), half, full
 const SNAP_POINTS = [14, 52, 88]
@@ -101,14 +101,17 @@ function DraggableSheet({ children, banner, initialSnapIndex = 1, onSnapChange }
         }}
         className="pointer-events-auto flex flex-col rounded-t-3xl bg-white shadow-2xl"
       >
-        <div
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          className="flex shrink-0 touch-none cursor-grab justify-center pt-3 pb-1 active:cursor-grabbing"
-        >
-          <div className="h-1 w-10 rounded-full bg-slate-300" />
+        {/* Drag handle row */}
+        <div className="flex shrink-0 touch-none items-center justify-center pt-3 pb-1 px-4">
+          <div
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            className="flex flex-1 cursor-grab justify-center active:cursor-grabbing"
+          >
+            <div className="h-1 w-10 rounded-full bg-slate-300" />
+          </div>
         </div>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pb-6 pt-2">
           {children}
@@ -124,13 +127,14 @@ function formatTime(ts) {
 }
 
 export default function Track() {
-  const user = useRequireAuth()
+  const user = useRequireAuth('customer')
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
   const [copied, setCopied] = useState(false)
   const [lookupSettled, setLookupSettled] = useState(false)
   const [trackingCode, setTrackingCode] = useState('')
+  const [outcomeBannerDismissed, setOutcomeBannerDismissed] = useState(false)
   const deliveries = useStore((s) => (user ? s.deliveries.filter((d) => d.customerId === user.id) : []))
   const delivery = useStore((s) => s.deliveries.find((d) => d.id === id || d.trackingId === id))
   const trackingId = location.state?.trackingId ?? delivery?.trackingId ?? id
@@ -138,36 +142,8 @@ export default function Track() {
   const searchParams = new URLSearchParams(location.search)
   const requestedTab = searchParams.get('tab')
 
-  useEffect(() => {
-    if (!delivery) return
-    if (!deliveryId) return
-    if (delivery.status === 'cancelled') return
-    if (delivery.status === 'pending') {
-      const t = setTimeout(() => updateDeliveryStatus(deliveryId, 'accepted', 'u-rider-1', 'Marcus Chen'), 800)
-      return () => clearTimeout(t)
-    }
-    if (delivery.status === 'accepted') {
-      const t = setTimeout(() => updateDeliveryStatus(deliveryId, 'picked_up'), 3000)
-      return () => clearTimeout(t)
-    }
-    if (delivery.status === 'picked_up') {
-      const t = setTimeout(() => updateDeliveryStatus(deliveryId, 'in_transit'), 2000)
-      return () => clearTimeout(t)
-    }
-    if (delivery.status === 'in_transit') {
-      let frac = 0
-      const iv = setInterval(() => {
-        frac += 0.05
-        if (frac >= 1) {
-          clearInterval(iv)
-          updateDeliveryStatus(deliveryId, 'delivered')
-        } else {
-          advanceCourier(deliveryId, frac)
-        }
-      }, 600)
-      return () => clearInterval(iv)
-    }
-  }, [delivery?.status, deliveryId])
+  // Auto-advance removed: the real logged-in rider now drives status progression
+  // from their dashboard. The store's listener system broadcasts changes here reactively.
 
   useEffect(() => {
     setLookupSettled(false)
@@ -180,6 +156,10 @@ export default function Track() {
     const timeout = window.setTimeout(() => setCopied(false), 1800)
     return () => window.clearTimeout(timeout)
   }, [copied])
+
+  useEffect(() => {
+    setOutcomeBannerDismissed(false)
+  }, [deliveryId, delivery?.status])
 
   function handleCopy() {
     if (!trackingId) return
@@ -352,21 +332,37 @@ export default function Track() {
     updateDeliveryStatus(delivery.id, 'cancelled')
   }
 
-  const banner = isDelivered ? (
-    <div className="flex items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+  const banner = !outcomeBannerDismissed && isDelivered ? (
+    <div className="flex items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 pr-3 shadow-lg shadow-emerald-900/5">
       <CheckCircle className="h-8 w-8 shrink-0 text-emerald-600" />
-      <div>
+      <div className="min-w-0 flex-1">
         <p className="font-bold text-emerald-700 text-lg">Package delivered!</p>
         <p className="text-sm text-slate-600 mt-0.5">Your delivery has been completed successfully.</p>
       </div>
+      <button
+        type="button"
+        onClick={() => setOutcomeBannerDismissed(true)}
+        aria-label="Close delivered indicator"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/80 text-emerald-700 transition-colors hover:bg-white"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
-  ) : isCancelled ? (
-    <div className="flex items-center gap-4 rounded-2xl bg-red-50 border border-red-200 p-5">
+  ) : !outcomeBannerDismissed && isCancelled ? (
+    <div className="flex items-center gap-4 rounded-2xl bg-red-50 border border-red-200 p-5 pr-3 shadow-lg shadow-red-900/5">
       <X className="h-8 w-8 shrink-0 text-red-500" />
-      <div>
+      <div className="min-w-0 flex-1">
         <p className="font-bold text-red-600 text-lg">Order cancelled</p>
         <p className="text-sm text-slate-600 mt-0.5">This delivery has been cancelled.</p>
       </div>
+      <button
+        type="button"
+        onClick={() => setOutcomeBannerDismissed(true)}
+        aria-label="Close cancelled indicator"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/80 text-red-600 transition-colors hover:bg-white"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
   ) : null
 

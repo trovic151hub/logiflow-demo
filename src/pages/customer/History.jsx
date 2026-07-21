@@ -38,7 +38,7 @@ function formatDateTime(value) {
 }
 
 export default function History() {
-  const user = useRequireAuth()
+  const user = useRequireAuth('customer')
   const navigate = useNavigate()
   const deliveries = useStore((s) => (user ? s.deliveries.filter((d) => d.customerId === user.id) : []))
   const [activeDelivery, setActiveDelivery] = useState(null)

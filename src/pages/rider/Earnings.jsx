@@ -19,7 +19,7 @@ export default function Earnings() {
       <main className="p-6 max-w-6xl mx-auto">
         <PageHeader title="Earnings" subtitle="Your completed deliveries and payouts." />
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           <StatCard label="Total earned" value={`₦${total}`} sub="all time" highlight Icon={Wallet} />
           <StatCard label="Deliveries" value={`${completed.length}`} sub="completed" Icon={Package} />
           <StatCard label="Avg per trip" value={`₦${avg}`} sub="payout" Icon={TrendingUp} />
@@ -64,18 +64,20 @@ export default function Earnings() {
 function StatCard({ label, value, sub, highlight, Icon }) {
   return (
     <div
-      className={`rounded-2xl p-6 shadow-sm border ${
+      className={`rounded-2xl p-3 sm:p-5 shadow-sm border min-w-0 ${
         highlight ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-surface-200'
       }`}
     >
       <div className="flex items-center justify-between mb-1">
-        <p className={`text-xs font-bold uppercase tracking-wider ${highlight ? 'text-white/60' : 'text-slate-400'}`}>
+        <p className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate ${
+          highlight ? 'text-white/60' : 'text-slate-400'
+        }`}>
           {label}
         </p>
-        {Icon && <Icon className={`h-4 w-4 ${highlight ? 'text-white/40' : 'text-slate-300'}`} />}
+        {Icon && <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 ${highlight ? 'text-white/40' : 'text-slate-300'}`} />}
       </div>
-      <p className="mt-1 font-display text-2xl font-bold">{value}</p>
-      <p className={`mt-2 text-xs ${highlight ? 'text-white/60' : 'text-slate-400'}`}>{sub}</p>
+      <p className="mt-1 font-display text-lg sm:text-2xl font-bold truncate">{value}</p>
+      <p className={`mt-1 text-[10px] sm:text-xs ${highlight ? 'text-white/60' : 'text-slate-400'}`}>{sub}</p>
     </div>
   )
 }

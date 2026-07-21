@@ -36,7 +36,7 @@ const SECTIONS = [
 ]
 
 export default function Account() {
-  const user = useRequireAuth()
+  const user = useRequireAuth('customer')
   const navigate = useNavigate()
   const location = useLocation()
   const liveUser = useStore((s) => (s.session ? s.users.find((item) => item.id === s.session.userId) : null))

@@ -1,4 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Package, ShieldCheck, Zap, ChevronDown, CheckCircle2, Navigation, Menu, Bike } from "lucide-react";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
@@ -7,25 +8,38 @@ export default function LogisticsLanding() {
   const { scrollY } = useScroll();
   const backgroundY = useTransform(scrollY, [0, 1000], ["0%", "30%"]);
   const opacity = useTransform(scrollY, [0, 500], [1, 0]);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const unsub = scrollY.on('change', (v) => setScrolled(v > 50));
+    return unsub;
+  }, [scrollY]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-inter selection:bg-brand/30 selection:text-brand-900 overflow-x-hidden">
-      {/* Navigation (Transparent) */}
-      <nav className="absolute inset-x-0 top-0 z-50 px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
+      {/* Navigation — fixed, transparent at top, frosted on scroll */}
+      <nav
+        className={`fixed inset-x-0 top-0 z-50 px-4 sm:px-6 lg:px-10 py-4 sm:py-6 transition-all duration-300 ${
+          scrolled
+            ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-slate-200/60'
+            : 'bg-transparent'
+        }`}
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <div
-              className="w-8 sm:w-9 rounded-lg flex items-center justify-center shrink-0"
-              style={{ color: "#ffffff" }}
-            >
+            <div className="w-8 sm:w-9 rounded-lg flex items-center justify-center shrink-0">
               <img
                 src="logo.png"
                 alt="logo"
-                className="h-9 w-auto object-contain brightness-0 invert"
+                className={`h-9 w-auto object-contain transition-all duration-300 ${
+                  scrolled ? '' : 'brightness-0 invert'
+                }`}
               />
             </div>
 
-            <span className="font-display font-bold text-sm sm:text-lg lg:text-xl text-white truncate">
+            <span className={`font-display font-bold text-sm sm:text-lg lg:text-xl truncate transition-colors duration-300 ${
+              scrolled ? 'text-slate-900' : 'text-white'
+            }`}>
               WorkPlace Logistics
             </span>
           </div>
@@ -35,7 +49,11 @@ export default function LogisticsLanding() {
               <button
                 type="button"
                 aria-label="Open menu"
-                className="flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 shrink-0 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-colors"
+                className={`flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 shrink-0 rounded-full backdrop-blur-md border transition-colors ${
+                  scrolled
+                    ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                    : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                }`}
               >
                 <Menu className="h-5 w-5" />
               </button>
@@ -111,7 +129,7 @@ export default function LogisticsLanding() {
             <source src="/delivery-highway.mp4" type="video/mp4" />
           </video>
           {/* Lighter overlay to let the bright video shine through, while maintaining text legibility */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-slate-50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20" />
         </motion.div>
 
         {/* Hero Content */}
@@ -222,10 +240,10 @@ w-full sm:w-auto"
           transition={{ delay: 1, duration: 1 }}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-400"
         >
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-800">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white">
             Scroll
           </span>
-          <ChevronDown className="w-5 h-5 animate-bounce text-slate-800" />
+          <ChevronDown className="w-5 h-5 animate-bounce text-white" />
         </motion.div>
       </section>
 

@@ -1,17 +1,20 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, LifeBuoy, MessageCircleMore, PhoneCall, Send, Plus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, LifeBuoy, MessageCircleMore, PhoneCall, Send } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
+import { useRequireAuth } from '@/lib/use-require-auth'
 
 export default function Help() {
+  const user = useRequireAuth('customer')
+  const navigate = useNavigate()
   const [message, setMessage] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
   const handleBack = () => {
     if (window.history.state && window.history.state.idx > 0) {
-      window.history.back()
+      navigate(-1)
     } else {
-      window.location.assign('/customer')
+      navigate('/customer')
     }
   }
 
@@ -20,6 +23,8 @@ export default function Help() {
     setSubmitted(true)
     setMessage('')
   }
+
+  if (!user) return null
 
   return (
     <AppShell>

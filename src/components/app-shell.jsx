@@ -1,9 +1,8 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { useRequireAuth } from '@/lib/use-require-auth'
 import {
   LayoutDashboard, PackagePlus, History, Bell, User, LogOut,
-  HelpCircle, ChevronDown,MapPin,PackageSearch , Wallet,
+  HelpCircle, ChevronDown, PackageSearch, Wallet,
 } from 'lucide-react'
 import { getCurrentUser, signOut, useStore, resetDemo } from '@/lib/mock-store'
 
@@ -64,12 +63,42 @@ useEffect(() => {
   const initials = user
     ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : ''
-  const deliveries = useStore((s) => (s.session ? s.deliveries.filter((d) => d.customerId === s.session.userId) : []))
+  const role = session?.role
+  const homePath = role === 'rider' ? '/rider' : '/customer'
+  const accountPath = role === 'rider' ? '/rider/account' : '/customer/account'
+  const helpPath = role === 'rider' ? null : '/customer/help'
+  const notificationsPath = role === 'rider' ? '/rider/notifications' : '/customer/notifications'
+  const deliveries = useStore((s) => {
+    if (!s.session) return []
+    if (s.session.role === 'rider') {
+      return s.deliveries.filter((d) => d.status === 'pending' || d.riderId === s.session.userId)
+    }
+    return s.deliveries.filter((d) => d.customerId === s.session.userId)
+  })
   const notifications = useMemo(() => {
     if (!deliveries.length) return []
 
     const items = []
     deliveries.forEach((delivery) => {
+      if (role === 'rider') {
+        if (delivery.status === 'pending') {
+          items.push({
+            id: `${delivery.id}-available`,
+            title: 'New ride request',
+            description: `${delivery.id} is available nearby.`,
+            time: delivery.createdAt,
+          })
+        } else {
+          const latestTime = Math.max(delivery.createdAt ?? 0, ...Object.values(delivery.statusTimestamps ?? {}).map((time) => Number(time) || 0))
+          items.push({
+            id: `${delivery.id}-job`,
+            title: 'Ride update',
+            description: `${delivery.id} is ${delivery.status.replaceAll('_', ' ')}.`,
+            time: latestTime,
+          })
+        }
+        return
+      }
       if (delivery.createdAt) {
         items.push({
           id: `${delivery.id}-created`,
@@ -114,20 +143,22 @@ useEffect(() => {
     })
 
     return items.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 6)
-  }, [deliveries])
+  }, [deliveries, role])
 
-  const role = session?.role
-  const homePath = role === 'rider' ? '/rider' : '/customer'
   const navLinks = role === 'rider' ? RIDER_LINKS : CUSTOMER_LINKS
-  const isDashboard = pathname === '/customer'
+  const isDashboard = pathname === homePath
   const latestNotificationTime = notifications.reduce((latest, item) => Math.max(latest, Number(item.time) || 0), 0)
-  const showNotificationDot = notifications.length > 0 && latestNotificationTime > notificationsReadAt
+  const paymentIncomplete =
+    role === 'rider' && user
+      ? !user.vehicleType || !user.plateNumber || !user.licenseNumber || !user.nin || !user.bankName || !user.accountNumber
+      : false
+  const showNotificationDot = paymentIncomplete || (notifications.length > 0 && latestNotificationTime > notificationsReadAt)
 
   useEffect(() => {
-    if (pathname === '/customer/notifications') {
+    if (pathname === notificationsPath) {
       setNotificationsOpen(false)
     }
-  }, [pathname])
+  }, [notificationsPath, pathname])
 
   return (
     <div className="min-h-screen flex flex-col pb-20 md:pb-0 bg-slate-50 text-slate-900">
@@ -145,8 +176,9 @@ useEffect(() => {
     transition-all
     duration-300
     overflow-visible
-    ${
-      isDashboard
+    ${role === 'rider'
+      ? 'min-h-[64px] md:min-h-16'
+      : isDashboard
         ? 'min-h-[180px] sm:min-h-[180px] lg:min-h-[200px]'
         : 'hidden md:flex md:min-h-16'
     }
@@ -160,7 +192,7 @@ useEffect(() => {
     
     {/* Logo */}
     <Link
-      to="/"
+      to={session ? homePath : '/'}
       className="flex items-center gap-1 shrink-0"
       style={{ color: '#ffffff' }}
     >
@@ -170,33 +202,19 @@ useEffect(() => {
         className="h-9 w-auto object-contain brightness-0 invert"
         onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'block'; }}
       />
-      <span className="font-display text-lg sm:text-xl mt-3 font-extrabold tracking-tight text-white">WORKSPACE</span>
+      <span className="font-display text-sm sm:text-xl font-extrabold tracking-tight text-white">WorkPlace Logistics</span>
     </Link>
 
     {/* Right controls */}
     <div className="flex items-center gap-2 sm:gap-3">
       {mounted && session && (
         <>
-          {/* Help
-          <Link
-            to="/customer/help"
-            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors"
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              color: '#ffffff',
-            }}
-            aria-label="Help"
-          >
-            <HelpCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Help</span>
-          </Link> */}
-
           {/* Notification bell */}
           <div className="relative">
             <button
               onClick={() => {
                 setNotificationsOpen(false)
-                navigate('/customer/notifications')
+                navigate(notificationsPath)
               }}
               className="relative p-2 rounded-full transition-colors"
               style={{ background: 'rgba(255,255,255,0.15)' }}
@@ -280,7 +298,7 @@ useEffect(() => {
               {profileOpen && (
                 <div className="absolute right-0 top-full z-[1400] mt-2 w-48 rounded-xl border border-surface-200 bg-white shadow-lg">
                   <Link
-                    to="/customer/account" className="px-4 py-3 border-b border-surface-200">
+                    to={accountPath} className="block px-4 py-3 border-b border-surface-200">
                     <p className="text-sm px-4  font-bold text-navy">
                       {user.name}
                     </p>
@@ -290,21 +308,23 @@ useEffect(() => {
                   </Link>
     
                   <Link
-                    to="/customer/account"
+                    to={accountPath}
                     onClick={() => setProfileOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-100 transition-colors"
                   >
                     <User className="h-4 w-4 text-slate-500" />
                     <span>Manage Account</span>
                   </Link>
-                   <Link
-                    to="/customer/help"
-                    onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-100 transition-colors"
-                  >
-                    <HelpCircle className="h-4 w-4 text-slate-500" />
-                    <span>Help</span>
-                  </Link>
+                  {helpPath && (
+                    <Link
+                      to={helpPath}
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-100 transition-colors"
+                    >
+                      <HelpCircle className="h-4 w-4 text-slate-500" />
+                      <span>Help</span>
+                    </Link>
+                  )}
     
                   <button
                     onClick={() => {
@@ -356,7 +376,7 @@ useEffect(() => {
   )}
 
   {/* ── Dashboard Greeting ── */}
-  {isDashboard && user && (
+  {isDashboard && user && role !== 'rider' && (
     <div className="px-4 sm:px-6 lg:px-8 pt-3 pb-10 sm:pb-12 lg:pb-14 flex flex-col gap-2 text-white max-w-7xl mx-auto w-full">
       <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">
         Hi, {user.name.split(' ')[0]}

@@ -15,6 +15,8 @@ import RiderDashboard from './pages/rider/Dashboard'
 import RiderJob from './pages/rider/Job'
 import RiderAccount from './pages/rider/Account'
 import RiderEarnings from './pages/rider/Earnings'
+import RiderNotifications from './pages/rider/Notifications'
+import { Toaster } from './components/ui/sonner'
 
 const queryClient = new QueryClient()
 
@@ -76,10 +78,12 @@ export default function App() {
           <Route path="/customer/help" element={<Help />} />
           <Route path="/rider" element={<RiderDashboard />} />
           <Route path="/rider/job/:id" element={<RiderJob />} />
+          <Route path="/rider/notifications" element={<RiderNotifications />} />
           <Route path="/rider/earnings" element={<RiderEarnings />} />
           <Route path="/rider/account" element={<RiderAccount />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Toaster richColors position="top-center" />
       </BrowserRouter>
     </QueryClientProvider>
   )

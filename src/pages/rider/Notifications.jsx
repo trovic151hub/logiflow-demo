@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { Bell, Clock3, PackageCheck, Truck, ArrowLeft } from 'lucide-react'
-import { AppShell} from '@/components/app-shell'
+import { AlertCircle, ArrowLeft, Bell, Briefcase, CheckCircle2, Clock3, Truck } from 'lucide-react'
+import { AppShell } from '@/components/app-shell'
 import { useRequireAuth } from '@/lib/use-require-auth'
 import { useStore } from '@/lib/mock-store'
 
@@ -25,45 +25,52 @@ function dayGroup(value) {
   return 'Earlier'
 }
 
-export default function NotificationsPage() {
-  const navigate= useNavigate()
-  const user = useRequireAuth('customer')
+function isPaymentIncomplete(user) {
+  return !user.vehicleType || !user.plateNumber || !user.licenseNumber || !user.nin || !user.bankName || !user.accountNumber
+}
+
+export default function RiderNotifications() {
+  const navigate = useNavigate()
+  const user = useRequireAuth('rider')
   const [readAt, setReadAt] = useState(() => {
     if (typeof window === 'undefined') return 0
     return Number(window.localStorage.getItem(NOTIFICATION_READ_KEY)) || 0
   })
-  const deliveries = useStore((s) => (user ? s.deliveries.filter((d) => d.customerId === user.id) : []))
+  const deliveries = useStore((s) =>
+    user ? s.deliveries.filter((d) => d.status === 'pending' || d.riderId === user.id) : [],
+  )
 
   const notifications = useMemo(() => {
     if (!deliveries.length) return []
 
     const items = []
     deliveries.forEach((delivery) => {
-      if (delivery.createdAt) {
+      if (delivery.status === 'pending') {
         items.push({
-          id: `${delivery.id}-created`,
-          title: 'Order booked',
-          description: `${delivery.id} was booked and is waiting for the next update.`,
+          id: `${delivery.id}-available`,
+          title: 'New ride request',
+          description: `${delivery.id} is available nearby for ${delivery.pickup.address} to ${delivery.dropoff.address}.`,
           time: delivery.createdAt,
-          icon: Bell,
+          icon: Briefcase,
         })
+        return
       }
 
       const timestamps = delivery.statusTimestamps ?? {}
       if (timestamps.accepted) {
         items.push({
           id: `${delivery.id}-accepted`,
-          title: 'Rider accepted',
-          description: `${delivery.id} was accepted by your rider.`,
+          title: 'Ride accepted',
+          description: `${delivery.id} has been added to your active jobs.`,
           time: timestamps.accepted,
-          icon: PackageCheck,
+          icon: Briefcase,
         })
       }
       if (timestamps.picked_up) {
         items.push({
           id: `${delivery.id}-picked-up`,
           title: 'Picked up',
-          description: `${delivery.id} has been picked up and is on the way.`,
+          description: `${delivery.id} pickup has been confirmed.`,
           time: timestamps.picked_up,
           icon: Truck,
         })
@@ -71,8 +78,8 @@ export default function NotificationsPage() {
       if (timestamps.in_transit) {
         items.push({
           id: `${delivery.id}-in-transit`,
-          title: 'In transit',
-          description: `${delivery.id} is now moving toward its destination.`,
+          title: 'Trip started',
+          description: `${delivery.id} is now moving toward dropoff.`,
           time: timestamps.in_transit,
           icon: Truck,
         })
@@ -80,10 +87,10 @@ export default function NotificationsPage() {
       if (timestamps.delivered) {
         items.push({
           id: `${delivery.id}-delivered`,
-          title: 'Delivered',
-          description: `${delivery.id} was completed successfully.`,
+          title: 'Delivery completed',
+          description: `${delivery.id} was completed successfully. Your payout has been recorded.`,
           time: timestamps.delivered,
-          icon: PackageCheck,
+          icon: CheckCircle2,
         })
       }
     })
@@ -93,7 +100,7 @@ export default function NotificationsPage() {
 
   if (!user) return null
 
-  const latestNotificationTime = notifications.reduce((latest, item) => Math.max(latest, Number(item.time) || 0), 0)
+  const paymentIncomplete = isPaymentIncomplete(user)
 
   function markAllRead() {
     const nextReadAt = Date.now()
@@ -101,30 +108,33 @@ export default function NotificationsPage() {
     setReadAt(nextReadAt)
     window.dispatchEvent(new Event('dashpoint:notifications-read'))
   }
-  const handleBack = () => {
+
+  function handleBack() {
     if (window.history.state && window.history.state.idx > 0) {
       navigate(-1)
     } else {
-      navigate('/customer')
+      navigate('/rider')
     }
   }
+
   return (
     <AppShell>
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-         <button
-            type="button"
-            onClick={handleBack}
-            aria-label="Go back"
-            className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
+        <button
+          type="button"
+          onClick={handleBack}
+          aria-label="Go back"
+          className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Notifications</p>
-            <h1 className="text-2xl font-bold text-slate-900">Recent activity</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Rider activity</h1>
           </div>
-          {notifications.length > 0 && (
+          {(notifications.length > 0 || paymentIncomplete) && (
             <button
               type="button"
               onClick={markAllRead}
@@ -135,13 +145,36 @@ export default function NotificationsPage() {
           )}
         </div>
 
+        {paymentIncomplete && (
+          <Link
+            to="/rider/account"
+            className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800 shadow-sm transition hover:bg-amber-100/70"
+          >
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-amber-600">
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+              <AlertCircle className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-bold">Complete payment & verification details</p>
+                <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                  Pinned
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-amber-700">
+                Add your vehicle, license, NIN, and bank details to finish setup and receive payouts.
+              </p>
+            </div>
+          </Link>
+        )}
+
         {notifications.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
               <Bell className="h-6 w-6" />
             </div>
-            <h2 className="mt-4 text-lg font-semibold text-slate-900">No activity yet</h2>
-            <p className="mt-2 text-sm text-slate-500">Your shipment updates will appear here once a booking is created.</p>
+            <h2 className="mt-4 text-lg font-semibold text-slate-900">No job activity yet</h2>
+            <p className="mt-2 text-sm text-slate-500">Ride requests and job status updates will appear here.</p>
           </div>
         ) : (
           <div className="space-y-3">

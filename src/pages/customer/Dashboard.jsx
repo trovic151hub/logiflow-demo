@@ -68,7 +68,7 @@ const TIPS = [
 
 export default function CustomerDashboard() {
   const navigate  = useNavigate()
-  const user      = useRequireAuth()
+  const user      = useRequireAuth('customer')
   const deliveries = useStore((s) =>
     user ? s.deliveries.filter((d) => d.customerId === user.id) : []
   )
