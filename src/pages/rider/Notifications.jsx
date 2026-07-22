@@ -157,9 +157,7 @@ export default function RiderNotifications() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-bold">Complete payment & verification details</p>
-                <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
-                  Pinned
-                </span>
+               
               </div>
               <p className="mt-1 text-sm text-amber-700">
                 Add your vehicle, license, NIN, and bank details to finish setup and receive payouts.

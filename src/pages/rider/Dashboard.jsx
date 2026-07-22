@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Briefcase, Star, Trophy, AlertCircle, ChevronRight, GripHorizontal, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -11,6 +11,10 @@ import { RiderMap } from '@/components/rider-map'
 const MAP_COLLAPSED = 36
 const MAP_DEFAULT = 260
 const MAP_MAX = 560
+// Desktop sidebar
+const SIDEBAR_MAX = 320
+const SIDEBAR_DEFAULT = 400
+const SIDEBAR_MIN = 820
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -168,11 +172,14 @@ function ActiveJobsList({ myJobs }) {
 
 export default function RiderDashboard() {
   const user = useRequireAuth('rider')
-  const dragStartRef = useRef({ y: 0, height: MAP_DEFAULT })
-  const [mapHeight, setMapHeight] = useState(MAP_DEFAULT)
-  const [isDragging, setIsDragging] = useState(false)
-  const [showDragHint, setShowDragHint] = useState(false)
+  const [mapHeight, setMapHeight] = useState(MAP_COLLAPSED)
+  const [showMap, setShowMap] = useState(false)
   const [paymentDismissed, setPaymentDismissed] = useState(false)
+  
+  // Desktop resizable sidebar
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT)
+  const [isResizing, setIsResizing] = useState(false)
+  const resizeStartRef = useRef({ x: 0, width: SIDEBAR_DEFAULT })
 
   const incoming = useStore((s) => s.deliveries.filter((d) => d.status === 'pending'))
   const myJobs = useStore((s) =>
@@ -190,7 +197,6 @@ export default function RiderDashboard() {
     !user.vehicleType || !user.plateNumber || !user.licenseNumber || !user.nin || !user.bankName || !user.accountNumber
   const showPaymentBanner = paymentIncomplete && !paymentDismissed
   const mapJobs = [...incoming, ...myJobs]
-  const isMapCollapsed = mapHeight <= MAP_COLLAPSED + 2
 
   function accept(id) {
     updateDeliveryStatus(id, 'accepted', user.id, user.name)
@@ -200,46 +206,47 @@ export default function RiderDashboard() {
     updateDeliveryStatus(id, 'cancelled')
   }
 
-  function handleMapDragStart(event) {
-    dragStartRef.current = { y: event.clientY, height: mapHeight }
-    event.currentTarget.setPointerCapture(event.pointerId)
-    setShowDragHint(false)
-    setIsDragging(true)
+  // Mobile: toggle map visibility
+  function toggleMap() {
+    const next = !showMap
+    setShowMap(next)
+    setMapHeight(next ? MAP_DEFAULT : MAP_COLLAPSED)
   }
 
-  function handleMapDrag(event) {
-    if (event.buttons !== 1) return
-    const nextHeight = dragStartRef.current.height + (event.clientY - dragStartRef.current.y)
-    setMapHeight(Math.min(MAP_MAX, Math.max(MAP_COLLAPSED, nextHeight)))
-  }
+  // Desktop: resize handlers
+  const handleResizeStart = useCallback((e) => {
+    resizeStartRef.current = { x: e.clientX, width: sidebarWidth }
+    setIsResizing(true)
+    document.documentElement.style.cursor = 'col-resize'
+    document.documentElement.style.userSelect = 'none'
+  }, [sidebarWidth])
 
-  function handleMapDragEnd(event) {
-    setIsDragging(false)
-    event.currentTarget.releasePointerCapture?.(event.pointerId)
-  }
+  const handleResizeMove = useCallback((e) => {
+    if (!isResizing) return
+    const delta = e.clientX - resizeStartRef.current.x
+    const newWidth = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, resizeStartRef.current.width + delta))
+    setSidebarWidth(newWidth)
+  }, [isResizing])
 
-  function handleMapHandleClick() {
-    // setShowDragHint(true)
-    // toast.info('Hold and drag the map handle', {
-    //   description: isMapCollapsed ? 'Drag downward to show the map.' : 'Drag up or down to resize the map.',
-    // })
-  }
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(false)
+    document.documentElement.style.cursor = ''
+    document.documentElement.style.userSelect = ''
+  }, [])
 
   return (
-    <AppShell >
+    <AppShell>
       {/* ================= MOBILE ================= */}
       <div className="md:hidden">
-        {/* Slidable map: drag the handle down to reveal it, drag up to close it away
-            to just the handle strip at the top of the page. */}
-        <div className="relative overflow-hidden bg-slate-100" style={{ height: mapHeight }}>
-          {!isMapCollapsed && (
+        <div 
+          className="relative overflow-hidden bg-slate-100 transition-all duration-300" 
+          style={{ height: mapHeight }}
+        >
+          {showMap && (
             <>
               <RiderMap jobs={mapJobs} />
               <div className="pointer-events-none absolute inset-x-0 top-0 z-[410] bg-gradient-to-b from-slate-950/45 via-slate-950/20 to-transparent px-4 pb-8 pt-3">
-                <div className="mx-auto flex max-w-sm items-center justify-center gap-2 rounded-full border border-white/15 bg-slate-950/55 px-3 py-2 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md">
-                  <GripHorizontal className="h-4 w-4 text-white/80" />
-                  <span>{showDragHint || isDragging ? 'Hold and drag the handle to resize the map' : 'Map view'}</span>
-                </div>
+              
               </div>
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/20 to-transparent" />
               <div className="absolute right-3 top-3">
@@ -247,31 +254,19 @@ export default function RiderDashboard() {
               </div>
             </>
           )}
+
           <button
             type="button"
-            onClick={handleMapHandleClick}
-            onPointerDown={handleMapDragStart}
-            onPointerMove={handleMapDrag}
-            onPointerUp={handleMapDragEnd}
-            onPointerCancel={handleMapDragEnd}
-            aria-label={isMapCollapsed ? 'Drag down to view map' : 'Drag to resize map'}
-            className="absolute mt-5 bottom-1  left-1/2 flex -translate-x-1/2 cursor-ns-resize items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-600"
+            onClick={toggleMap}
+            aria-label={showMap ? 'Hide map' : 'Show map'}
+            className="absolute bottom-1 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 active:bg-slate-100 shadow-sm"
           >
             <GripHorizontal className="h-4 w-4" />
-            {isMapCollapsed ? 'Show map' : 'Drag to resize'}
+            {showMap ? 'Hide map' : 'Show map'}
           </button>
-          {!isMapCollapsed && (
-            <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center px-4 pt-3">
-              <div className="flex w-full max-w-sm items-center justify-center gap-2 rounded-full border border-slate-200 bg-white/95 px-3 py-2 text-[11px] font-semibold text-slate-600 shadow-sm">
-                <GripHorizontal className="h-4 w-4 text-blue-600" />
-              
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Everything below the map hides while the map is actively being dragged. */}
-        <div className= 'space-y-4 p-4'>
+        <div className="space-y-4 p-4">
           {showPaymentBanner && <PaymentBanner onDismiss={() => setPaymentDismissed(true)} />}
 
           <GreetingEarningsCard name={firstName} amount={todayEarnings} count={completed.length} />
@@ -290,16 +285,16 @@ export default function RiderDashboard() {
       </div>
 
       {/* ================= DESKTOP ================= */}
-      {/* Sidebar (greeting, earnings, stats, job lists) + map flexed to fill the rest,
-          full-height command-centre layout like an Uber/Bolt driver console. */}
-      <div className="hidden md:flex md:h-[calc(100vh-72px)] md:gap-6 md:p-6">
-        {/* NOTE: adjust the 72px offset above to match AppShell's actual header height */}
-        <aside className="flex w-[400px] shrink-0 flex-col gap-5 overflow-y-auto pr-1">
+      <div className="hidden md:flex md:h-[calc(100vh-72px)] md:gap-6 md:p-6 relative">
+        {/* Resizable Sidebar */}
+        <aside 
+          className="flex shrink-0 flex-col gap-5 overflow-y-auto pr-1 border-r border-slate-200"
+          style={{ width: `${sidebarWidth}px` }}
+        >
+          {/* ... sidebar content unchanged ... */}
           <div>
-            <h1 className="font-display text-2xl font-bold text-slate-900">
-              {getGreeting()}, {firstName}
-            </h1>
-            <p className="text-sm text-slate-500">Here&apos;s what&apos;s happening around you.</p>
+           
+            {/* <p className="text-sm text-slate-500">Here&apos;s what&apos;s happening around you.</p> */}
           </div>
 
           {showPaymentBanner && <PaymentBanner onDismiss={() => setPaymentDismissed(true)} />}
@@ -318,6 +313,17 @@ export default function RiderDashboard() {
           </SectionCard>
         </aside>
 
+        {/* Resize Handle */}
+        <div
+          className={`absolute top-0 bottom-0 w-[3px] bg-transparent hover:bg-blue-500/40 active:bg-blue-500 cursor-col-resize z-50 transition-colors ${isResizing ? 'bg-blue-500' : ''}`}
+          style={{ left: `${sidebarWidth + 24}px` }}
+          onMouseDown={handleResizeStart}
+          onMouseMove={handleResizeMove}
+          onMouseUp={handleResizeEnd}
+          onMouseLeave={handleResizeEnd}
+        />
+
+        {/* Map Area */}
         <section className="relative min-w-0 flex-1 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
           <RiderMap jobs={mapJobs} />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-slate-950/25 to-transparent" />
@@ -329,4 +335,3 @@ export default function RiderDashboard() {
     </AppShell>
   )
 }
- 
